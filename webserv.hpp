@@ -3,17 +3,17 @@
 # define WEBSERV_HPP
 
 #include <sys/socket.h>
-#include <unistd.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #include <iostream>
-#include <string>
+#include <iostream>
+#include <sys/select.h>
 
-#define PORT 8080
-
+#define PORT 4242
+#define MAX_CLIENTS 10
 class webserv {
     private:
-    int server_fd;//SERVER FILE DESCRIPTOR
-    int client_fd;//CLIENT FILE DESCRIPTOR
+    int server_socket;//SERVER FILE DESCRIPTOR
     struct sockaddr_in address;
     public:
     webserv();
