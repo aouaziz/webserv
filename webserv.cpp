@@ -1,27 +1,23 @@
 #include "webserv.hpp"
 
 
-webserv::webserv()
+
+void webserv::ServInit()
 {
-    
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);//port
+    address.sin_addr.s_addr = INADDR_ANY;//ip address
 }
 
-int webserv::getServFd()
+void webserv::Erorr(std::string error)
 {
-    return (server_socket);
+    std::cerr << error << std::endl;
+    exit(EXIT_FAILURE); 
 }
 
-void webserv::setServFd(int fd)
-{
-    server_socket = fd;
-}
 
-webserv::~webserv()
-{
-    close(server_socket);
-}
 
-void webserv::start()
+void webserv::Start()
 {
     std::string hello = "Hello from serer\n";
     int addrlen = sizeof(address);
@@ -46,6 +42,7 @@ void webserv::start()
     fd_set sockets;
     FD_ZERO(&sockets);
     FD_SET(server_socket, &sockets);
+    int maxfd =server_socket;
     std::cout << "Server listening on port " << PORT << std::endl;
 
     while (true)
@@ -88,4 +85,12 @@ void webserv::start()
             }
         }
     }
+    close(server_socket);
+}
+
+webserv::webserv()
+{ 
+}
+webserv::~webserv()
+{
 }

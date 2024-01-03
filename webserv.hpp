@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <iostream>
-#include <iostream>
+#include <string>
 #include <sys/select.h>
 
 #define PORT 4242
@@ -17,10 +17,11 @@ class webserv {
     struct sockaddr_in address;
     public:
     webserv();
-    int getServFd();
-    void setServFd(int fd);
+    void ServInit();
+    int CreatServer();
+    void Erorr(std::string error);
     ~webserv();
-    void start();
+    void Start();
 };
 
 #endif
