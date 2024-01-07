@@ -71,7 +71,7 @@ A socket is a fundamental concept in computer networking that facilitates commun
 - Datagram Socket (SOCK_DGRAM): 
 This type of socket uses UDP (User Datagram Protocol), which is a connectionless protocol. Datagram sockets are often used in scenarios where low latency and quick transmission of data are more important than ensuring the order and reliability of data, such as real-time video streaming or online gaming.
 
-<p align="center"><img src="https://github.com/aouaziz/webserv/blob/master/Data/socket.jpeg" alt="socket-image"></p>
+<p align="center"><img src="https://github.com/aouaziz/webserv/blob/master/Data/socket.jpg" alt="socket-image"></p>
 
 
 ## Summary
