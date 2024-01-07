@@ -1,0 +1,5 @@
+<h1 align="center" id="title">Webserv</h1>
+
+<p align="center"><img src="https://github.com/aouaziz/webserv/blob/master/Data/68747470733a2f2f692e696d6775722e636f6d2f69336e734d78432e6a7067.jpeg" alt="project-image"></p>
+
+<p id="description">The goal of The aim of this project is to create an HTTP web server using C++98 from scratch. The web server must be capable of handling various HTTP requests such as GET HEAD POST PUT and DELETE and must have the ability to serve static files from a specific root directory or dynamic content using CGI. Additionally it should be able to handle multiple client connections concurrently with the aid of select().project is to build a C++98-compatible HTTP web server from scratch. The web server can handle HTTP GET HEAD POST PUT and DELETE Requests and can serve static files from a specified root directory or dynamic content using CGI. It is also able to handle multiple client connections concurrently with the help of select().</p>
