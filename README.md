@@ -4,24 +4,57 @@
 
 <p id="description">The goal of The aim of this project is to create an HTTP web server using C++98 from scratch. The web server must be capable of handling various HTTP requests such as GET HEAD POST PUT and DELETE and must have the ability to serve static files from a specific root directory or dynamic content using CGI. Additionally it should be able to handle multiple client connections concurrently with the aid of select().project is to build a C++98-compatible HTTP web server from scratch. The web server can handle HTTP GET HEAD POST PUT and DELETE Requests and can serve static files from a specified root directory or dynamic content using CGI. It is also able to handle multiple client connections concurrently with the help of select().</p>
 
-# Sockets :
+# Sockets 
 
-A socket is a fundamental concept in computer networking that facilitates communication between different processes running on separate devices within a network. Here are some key points to understand about sockets:
+## Overview
+A socket is a fundamental concept in computer networking that facilitates communication between different processes running on separate devices within a network. 
 
-- Definition:
+## key points to understand about sockets
+
+- **Definition:**
  A socket is often described as "a pipe between two computers on a network through which data flows" (Mulholland, 2004). This definition emphasizes the role of a socket as a communication channel that allows data to be exchanged between two devices.
 
-- Winsock Functions:
+- **Winsock Functions:**
  In the context of Windows programming, most Winsock functions operate on a socket. Winsock (Windows Sockets) is a programming interface that enables software applications to communicate over a network. The socket, in this context, serves as a handle for the connection. Both the sending and receiving ends of a connection use a socket to manage the communication.
 
-- Two-Way Communication:
+- **Two-Way Communication:**
  Sockets facilitate two-way communication, meaning that data can be both sent and received on a socket. This bidirectional nature allows for real-time interaction between processes running on different devices.
 
 - Types of Sockets:
 
+## Summary
+
 Streaming Socket (SOCK_STREAM): This type of socket uses TCP (Transmission Control Protocol) for communication. TCP provides a reliable, connection-oriented communication stream, making it suitable for applications where data integrity and order are crucial, such as file transfers or web browsing.
 Datagram Socket (SOCK_DGRAM): This type of socket uses UDP (User Datagram Protocol), which is a connectionless protocol. Datagram sockets are often used in scenarios where low latency and quick transmission of data are more important than ensuring the order and reliability of data, such as real-time video streaming or online gaming.
 In summary, sockets are essential for enabling communication between processes on different devices in a network. They provide a versatile mechanism for data exchange, supporting both reliable, connection-oriented communication (TCP) and faster, connectionless communication (UDP). Sockets are a fundamental building block for various networked applications, including web browsers, file transfer protocols, and online games.
+
+# IP Addresses
+
+## Overview
+
+IP Addresses are fundamental in computer networking, acting as unique identifiers for devices within a network. This README highlights key aspects of IP Addresses.
+
+## Usage in Communication
+
+- **Both the server and client use an IP and port number.**
+  IP Addresses, along with port numbers, are used to distinguish and facilitate communication between servers and clients on a network.
+
+- **The IP address of both server and client is configured during Network setup unless it is allocated dynamically.**
+  During network setup, administrators configure the IP addresses for both servers and clients. Alternatively, dynamic allocation protocols may assign IP addresses dynamically.
+
+- **A machine may have more than one network interface card (NIC), in which case it may have more than one IP address.**
+  Machines with multiple Network Interface Cards (NICs) can have multiple IP addresses, each associated with a distinct network connection.
+
+- **When developing Network Programs, the port number of the server is usually specified within the code, whereas the client port number is allocated by the O/S.**
+  In network programming, developers typically embed the server's port number in the code. The client's port number, on the other hand, is often assigned dynamically by the operating system.
+
+- **The Loopback address 127.0.0.1 refers to the current machine. This can be used during development to test both client and server on a single machine.**
+  The loopback address (127.0.0.1) allows communication with the local machine. It is commonly employed during development to test both client and server functionalities on a single machine without external network involvement.
+
+## Summary
+
+In summary, IP addresses are critical identifiers in networking, enabling communication between devices. Understanding their configuration, association with network interfaces, and the role of port numbers is essential for effective development and testing of network programs.
+
 
 
 
