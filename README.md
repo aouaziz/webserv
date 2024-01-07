@@ -4,6 +4,19 @@
 
 <p id="description">The goal of The aim of this project is to create an HTTP web server using C++98 from scratch. The web server must be capable of handling various HTTP requests such as GET HEAD POST PUT and DELETE and must have the ability to serve static files from a specific root directory or dynamic content using CGI. Additionally it should be able to handle multiple client connections concurrently with the aid of select().project is to build a C++98-compatible HTTP web server from scratch. The web server can handle HTTP GET HEAD POST PUT and DELETE Requests and can serve static files from a specified root directory or dynamic content using CGI. It is also able to handle multiple client connections concurrently with the help of select().</p>
 
+<h1 align="center" id="title">The OSI Reference Model</h1>
+
+**The OSI Reference Model or Open Systems Interconnection Reference Model** is used to help make sure that systems all around the world can interconnect with each other.  For example, getting an Ethernet LAN to transparently exchange messages with an IBM Token Ring LAN to exchange messages via an ATM backbone.  The overall goal of this standard is to promote interoperability.  It was used as the basis of the template for the IP or Internet Protocol.
+The OSI model divides operating in networks into seven functional layers.  Each layer specifies the functions or set of functions to be performed when data is transferred across a network.  Regardless of whether the local network operating system is Novell Netware, AppleTalk or IP, if the operating system adheres to the OSI model more or less  the same rules are applied at each layer.
+
+- **A diagram of the OSI model is given in the following image.**
+
+<p align="center"><img src="https://github.com/aouaziz/webserv/blob/master/Data/osi_reference_model.jpg" alt="osi-image"></p>
+
+- **The following table gives a succinct presentation of the function of each layer.**
+
+<p align="center"><img src="https://github.com/aouaziz/webserv/blob/master/Data/osi_Layer.png" alt="osilayers-image"></p>
+
 
 <h1 align="center" id="title">IP Addresses</h1>
 
