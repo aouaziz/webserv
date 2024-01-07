@@ -4,9 +4,8 @@
 
 <p id="description">The goal of The aim of this project is to create an HTTP web server using C++98 from scratch. The web server must be capable of handling various HTTP requests such as GET HEAD POST PUT and DELETE and must have the ability to serve static files from a specific root directory or dynamic content using CGI. Additionally it should be able to handle multiple client connections concurrently with the aid of select().project is to build a C++98-compatible HTTP web server from scratch. The web server can handle HTTP GET HEAD POST PUT and DELETE Requests and can serve static files from a specified root directory or dynamic content using CGI. It is also able to handle multiple client connections concurrently with the help of select().</p>
 
-# Sockets 
+<h1 align="center" id="title">Sockets</h1>
 
-## Overview
 A socket is a fundamental concept in computer networking that facilitates communication between different processes running on separate devices within a network. 
 
 ## key points to understand about sockets
@@ -28,9 +27,7 @@ Streaming Socket (SOCK_STREAM): This type of socket uses TCP (Transmission Contr
 Datagram Socket (SOCK_DGRAM): This type of socket uses UDP (User Datagram Protocol), which is a connectionless protocol. Datagram sockets are often used in scenarios where low latency and quick transmission of data are more important than ensuring the order and reliability of data, such as real-time video streaming or online gaming.
 In summary, sockets are essential for enabling communication between processes on different devices in a network. They provide a versatile mechanism for data exchange, supporting both reliable, connection-oriented communication (TCP) and faster, connectionless communication (UDP). Sockets are a fundamental building block for various networked applications, including web browsers, file transfer protocols, and online games.
 
-# IP Addresses
-
-## Overview
+<h1 align="center" id="title">IP Addresses</h1>
 
 IP Addresses are fundamental in computer networking, acting as unique identifiers for devices within a network. This README highlights key aspects of IP Addresses.
 
