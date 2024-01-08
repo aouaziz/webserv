@@ -1,13 +1,4 @@
-#include "webserv.hpp"
-
-
-
-void webserv::ServInit()
-{
-    address.sin_family = AF_INET;
-    address.sin_port = htons(PORT);//port
-    address.sin_addr.s_addr = INADDR_ANY;//ip address
-}
+#include "../includes/webserv.hpp"
 
 void webserv::Erorr(std::string error)
 {
@@ -21,7 +12,7 @@ void webserv::Start()
 {
     std::string hello = "Hello from serer\n";
     int addrlen = sizeof(address);
-    if((server_socket =  socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    if((server_socket =  socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
        throw std::runtime_error("Socket creation failed");
     }
