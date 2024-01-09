@@ -12,7 +12,7 @@
 # include <sstream>
 # include <fstream>
 #define SOCKETERROR -1
-#define BUFSIZE 4096
+#define BUFSIZE 1024
 
 class server{
     private :
