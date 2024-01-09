@@ -3,7 +3,7 @@
 void webserv::Erorr(std::string error)
 {
     std::cerr << error << std::endl;
-    exit(EXIT_FAILURE); 
+    std::exit(EXIT_FAILURE); 
 }
 
 

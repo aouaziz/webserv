@@ -8,8 +8,11 @@
 # include <unistd.h>
 # include <string.h>
 # include <vector>
+#include <sys/select.h>
+#include <sys/time.h>
 # include <sys/stat.h>
 # include <sstream>
+#include <fcntl.h>
 # include <fstream>
 #define SOCKETERROR -1
 #define BUFSIZE 1024
@@ -20,6 +23,10 @@ class server{
     std::string ip;
     int server_socket;//SERVER FILE DESCRIPTOR
     struct sockaddr_in address;
+    struct timeval time;
+    fd_set fd_r,fd_w,fd_tr,fd_tw;
+    std::vector<int> client;
+    int maxfd;
     public :
     server();
     void ServInit();
