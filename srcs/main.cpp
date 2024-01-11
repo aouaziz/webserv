@@ -1,5 +1,5 @@
 
-#include "../includes/webserv.hpp"
+#include "../includes/server.hpp"
 
 
 int main(int argc, char **argv)
@@ -10,6 +10,5 @@ int main(int argc, char **argv)
         std::cout << "Usage: ./webserv [config_file]" << std::endl;
         return (1);
     }
-    webserv server;
-    server.Start(); 
+    
 }
