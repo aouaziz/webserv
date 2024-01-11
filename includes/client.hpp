@@ -3,6 +3,7 @@
 
 #include "server.hpp"
 
+class server;
 struct Request
 {
     std::string method;
@@ -10,10 +11,7 @@ struct Request
     int httptype;
 };
 
-
-
-class client
-{
+class client{
 
 public:
     struct addrinfo *clienfo;

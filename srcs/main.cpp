@@ -10,5 +10,6 @@ int main(int argc, char **argv)
         std::cout << "Usage: ./webserv [config_file]" << std::endl;
         return (1);
     }
-    
+    server test(80,"127.0.0.1");
+    test.CreatServer();
 }

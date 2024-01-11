@@ -1,6 +1,6 @@
 NAME = webserv
 
-SRC =  ./srcs/main.cpp  ./srcs/webserv.cpp 
+SRC =  ./srcs/main.cpp  ./srcs/server.cpp ./srcs/client.cpp 
 OBJ = $(SRC:.cpp=.o)
 CXX = c++
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98 

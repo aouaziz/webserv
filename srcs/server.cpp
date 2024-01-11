@@ -1,6 +1,10 @@
 #include "../includes/server.hpp"
 
-server::server(){}
+server::server(int port, std::string ip)
+{
+    this->ip = ip;
+    this->port = port;
+}
 
 server::~server(){
     close(server_socket);
@@ -52,9 +56,10 @@ void server::check(int namber ,std::string error)
     }
 }
 
-int server::CreatServer(int port, char* ip)
+int server::CreatServer()
 {
     int client_count ;
+    
     ServInit();
     check((server_socket = socket(servinfo->ai_family,servinfo->ai_socktype,servinfo->ai_protocol)),"Socket creation failed");
     SelectInit();
@@ -88,7 +93,7 @@ int server::CreatServer(int port, char* ip)
 
 void server::HandleResponse(int c)
 {
-    int total = 0;
+    size_t total = 0;
     int bytesend = 0;
     std::map<int,client>::iterator it = ClientMap.find(c);
     if(it == ClientMap.end())
@@ -99,11 +104,18 @@ void server::HandleResponse(int c)
     int bytesleft = it->second.rtmp.size();
     while(total < it->second.rtmp.size())
     {
-        check(bytesend = send(it->second.clien_socket,it->second.&rtmp[total],bytesleft,0),"send error ");
+        const char *Send = it->second.rtmp.c_str();
+        bytesend = send(it->second.clien_socket,Send +total,bytesleft,0);
+        if (bytesend <= 0) {
+            std::cerr << "failed to send to " << c << " or connection closed\n";
+            close(c);
+            FD_CLR(c, &fd_r);
+            FD_CLR(c, &fd_w);
+        }
+          
         total += bytesend;
         bytesleft -= bytesend;
     }
-    
 }
 
 void server::HandleRequest(int c)
@@ -116,8 +128,6 @@ void server::HandleRequest(int c)
         std::cerr << " client not found \n";
         return;
     }
-    std::string stream;
-    int bytesRead = 0;                
     while (true)
     {
         char buffer[BUFSIZE] ={0};
