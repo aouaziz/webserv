@@ -20,10 +20,8 @@
 #include <cstdlib>
 #include <sstream>
 #define SOCKETERROR -1
-#define BUFSIZE 1024
+#define BUFSIZE 1024`
 
-class client;
-struct Request;
 class server{
     private :
     client tmp;

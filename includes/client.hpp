@@ -3,14 +3,12 @@
 
 #include "server.hpp"
 
-class server;
 struct Request
 {
     std::string method;
     std::string target;
     int httptype;
 };
-
 class client{
 
 public:
