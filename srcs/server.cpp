@@ -1,9 +1,7 @@
 #include "../includes/server.hpp"
 
-server::server(int port, std::string ip)
+server::server()
 {
-    this->ip = ip;
-    this->port = port;
 }
 
 server::~server(){

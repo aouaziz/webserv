@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "server.hpp"
+#include "include.hpp"
 
 struct Request
 {
@@ -17,8 +17,6 @@ public:
     std::string rtmp;
     struct Request request;
     client();
-    client(const client &other);
-    client& operator=(const client& other) ;
     ~client();
 };
 
