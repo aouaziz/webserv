@@ -34,7 +34,6 @@
 #define MapOf_Str_Str std::map<std::string, std::string>
 std::string to_string(size_t num);
 size_t to_namber(const char *num);
-
-
+void HandleSocketError(int namber, const std::string& errorMessage);
 
 #endif

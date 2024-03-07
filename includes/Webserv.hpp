@@ -11,6 +11,7 @@ private:
     fd_set fd_r,fd_tr,fd_w,fd_tw;
     int maxfd;
     timeval time;
+    int max ;
     int Slecetfd;
 public:
     Webserv(Config config);

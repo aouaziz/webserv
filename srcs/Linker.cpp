@@ -1,7 +1,7 @@
 #include "../includes/include.hpp"
 #include "../includes/Linker.hpp"
 #include "../includes/Config.hpp"
-#include "../includes/HTTPMethod.hpp"
+#include "../includes/HTTP.hpp"
 #include "../includes/Server.hpp"
 
 Linker::Linker()

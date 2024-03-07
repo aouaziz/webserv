@@ -1,6 +1,6 @@
-#include "../includes/HTTPMethod.hpp"
+#include "../includes/HTTP.hpp"
 
-int HTTPMethod::erase(std::string &data, size_t &chunk_size)
+int HTTP::erase(std::string &data, size_t &chunk_size)
 {
 	size_t r = data.length() - chunk_size;
 
@@ -19,7 +19,7 @@ int HTTPMethod::erase(std::string &data, size_t &chunk_size)
 }
 
 
-int HTTPMethod::check_and_process_remaining(std::string &data, size_t &chunk_size, std::ofstream &output)
+int HTTP::check_and_process_remaining(std::string &data, size_t &chunk_size, std::ofstream &output)
 {
 	if (this->to_erase)
 	{
@@ -46,7 +46,7 @@ int HTTPMethod::check_and_process_remaining(std::string &data, size_t &chunk_siz
 	return 0;
 }
 
-int HTTPMethod::process_buffered_data(std::string &data, size_t &chunk_size, std::ofstream &output)
+int HTTP::process_buffered_data(std::string &data, size_t &chunk_size, std::ofstream &output)
 {
 	if (check_and_process_remaining(data, chunk_size, output))
 		return 1; // More data needs to be read
@@ -87,7 +87,7 @@ int HTTPMethod::process_buffered_data(std::string &data, size_t &chunk_size, std
 	return 1;
 }
 
-void HTTPMethod::process_chunked_data(std::fstream &input, std::ofstream &output)
+void HTTP::process_chunked_data(std::fstream &input, std::ofstream &output)
 {
 	size_t buffer_size = 2048;
 	char buffer[2048];
@@ -118,7 +118,7 @@ void HTTPMethod::process_chunked_data(std::fstream &input, std::ofstream &output
 }
 
 // init chunk, file
-void HTTPMethod::handle_chunked_post(Client *client)
+void HTTP::handle_chunked_post(Client *client)
 {
 	// we create a file which will hold the parsed body
 	std::string chunked_file = client->file_name;
@@ -129,14 +129,14 @@ void HTTPMethod::handle_chunked_post(Client *client)
 	else
 		chunked_file += "_chunked";
 
-	std::ofstream output(chunked_file, std::ios::binary | std::ios::out | std::ios::app);
+	std::ofstream output(chunked_file.c_str(), std::ios::binary | std::ios::out | std::ios::app);
 	if (!output.is_open())
 	{
 		// error
 	}
 	client->file_body.close();
 	// client->file_body.seekg(0, std::ios::beg);		 // set the cursor to the begining (just in case)
-	client->file_body.open(client->file_name, std::ios::binary | std::ios::in);
+	client->file_body.open(client->file_name.c_str(), std::ios::binary | std::ios::in);
 	this->to_erase = false;
 	process_chunked_data(client->file_body, output); // process the body and copy it to our file
 	// we close the old file and deleted, as we dont need it anymore
@@ -147,7 +147,7 @@ void HTTPMethod::handle_chunked_post(Client *client)
 }
 
 // Function to handle the POST request
-int HTTPMethod::POST(Client *client)
+int HTTP::POST(Client *client)
 {
 	if (this->htype == Chunk)
 		handle_chunked_post(client);
@@ -181,7 +181,7 @@ int HTTPMethod::POST(Client *client)
 	return 0;
 }
 
-int HTTPMethod::prepapreHeaders(Client *client)
+int HTTP::prepapreHeaders(Client *client)
 {
 	std::string extension = Path.substr(Path.find_last_of('.'));
 	std::string mime_type = getMimeType(extension);
@@ -194,7 +194,7 @@ int HTTPMethod::prepapreHeaders(Client *client)
 }
 
 // Function to initialize file handling
-int HTTPMethod::initializeFileHandling(Client *client)
+int HTTP::initializeFileHandling(Client *client)
 {
 	struct stat state;
 	stat(this->Path.c_str(), &state);
@@ -226,7 +226,7 @@ int HTTPMethod::initializeFileHandling(Client *client)
 }
 
 // Function to handle Content-Length
-int HTTPMethod::handleContentLength(const char *body, int bytesreceived, int &StatValue)
+int HTTP::handleContentLength(const char *body, int bytesreceived, int &StatValue)
 {
 	std::string bytesreceivedStr;
 	bytesreceivedStr = to_string((size_t)bytesreceived);
@@ -251,7 +251,7 @@ int HTTPMethod::handleContentLength(const char *body, int bytesreceived, int &St
 }
 
 // Function to close the file and send response
-void HTTPMethod::closeFileAndSendResponse()
+void HTTP::closeFileAndSendResponse()
 {
 	this->response_ready = true;
 	// close(this->PostFd);

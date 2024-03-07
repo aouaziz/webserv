@@ -32,7 +32,7 @@ int main(int ac, char **av)
 //     // 1. Create a server config
 //     ServerConfig serverConfig;
 //     // 2. Set the server config
-//     HTTPMethod httpMethod(serverConfig);
+//     HTTP HTTP(serverConfig);
 //     // 3. Open a file to write to
 //     int fd = open("post.txt", O_WRONLY | O_CREAT, 0644);
 //     if (fd == -1) {
@@ -40,13 +40,13 @@ int main(int ac, char **av)
 //         return 1;
 //     }
 //     // 4. Set the file descriptor
-//     httpMethod.PostFd = fd;
+//     HTTP.PostFd = fd;
 //     // 5. Create a body to send
 //     const char* body = "4\r\nWiki\r\n5\r\npedia\r\nE\r\n in\r\n\r\nchunks.\r\n0\r\n\r\n";
 //     // 6. Get the length of the body
 //     int bytesreceived = strlen(body);
 //     // 7. Call the chunkes method
-//     int result = httpMethod.chunkes(body, bytesreceived);
+//     int result = HTTP.chunkes(body, bytesreceived);
 //     // 8. Print the result
 //     std::cout << "Result: " << result << std::endl;
 //     // 9. Print the contents of the file

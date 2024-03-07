@@ -16,7 +16,7 @@ enum ContentType
 
 class Client;
 
-class HTTPMethod // HTTPMethod
+class HTTP // HTTP
 {
 public:
 	int htype;
@@ -53,8 +53,8 @@ public:
 	bool	to_erase;
 
 	// METHODS
-	HTTPMethod(ServerConfig serverConfig);
-	~HTTPMethod();
+	HTTP(ServerConfig serverConfig);
+	~HTTP();
 	void CheckRecvFlags();
 	void setData();
 	void setConfig(ServerConfig &config);
@@ -90,6 +90,6 @@ public:
 	int process_buffered_data(std::string &data, size_t &chunk_size, std::ofstream &output);
 	int check_and_process_remaining(std::string &data, size_t &chunk_size, std::ofstream &output);
 	int erase(std::string &data, size_t &chunk_size);
-
+	void ResetMethod();
 
 };

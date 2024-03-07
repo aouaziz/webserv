@@ -1,4 +1,4 @@
-#include "../includes/HTTPMethod.hpp"
+#include "../includes/HTTP.hpp"
 
 void    appendHeader(std::stringstream& header, const std::string& name, const std::string& value)
 {
@@ -11,7 +11,7 @@ void    appendHeader(std::stringstream& header, const std::string& name, const s
 
     }
 }
-void HTTPMethod::   SendResponseHeader(std::string CodeToSend, std::string Extention, std::string location, int Content_Length) // send Response header
+void HTTP::   SendResponseHeader(std::string CodeToSend, std::string Extention, std::string location, int Content_Length) // send Response header
 {
     std::stringstream header;
     std::string date = this->_linker.getDate();
@@ -65,7 +65,7 @@ std::string         generateErrorPage(std::string CodeToSend, std::string status
 }
 
 
-void HTTPMethod::   sendCodeResponse(std::string CodeToSend) 
+void HTTP::   sendCodeResponse(std::string CodeToSend) 
 {
     std::cout << "sendCodeResponse " << CodeToSend << std::endl;
     std::string Content;

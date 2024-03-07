@@ -1,6 +1,6 @@
-#include "../includes/HTTPMethod.hpp"
+#include "../includes/HTTP.hpp"
 
-HTTPMethod::HTTPMethod(ServerConfig serverConfig)
+HTTP::HTTP(ServerConfig serverConfig)
 {
 	this->_config = serverConfig;
 	this->response_ready = false;
@@ -12,11 +12,11 @@ HTTPMethod::HTTPMethod(ServerConfig serverConfig)
 	this->is_header_sent = false;
 }
 
-HTTPMethod::~HTTPMethod()
+HTTP::~HTTP()
 {
 }
 
-void HTTPMethod::replaceCarriageReturn(std::string &inputString)
+void HTTP::replaceCarriageReturn(std::string &inputString)
 {
 	size_t found = inputString.find('\r');
 
@@ -28,12 +28,12 @@ void HTTPMethod::replaceCarriageReturn(std::string &inputString)
 }
 
 // SETTERS
-void HTTPMethod::setConfig(ServerConfig &config)
+void HTTP::setConfig(ServerConfig &config)
 {
 	this->_config = config;
 }
 
-void HTTPMethod::setData()
+void HTTP::setData()
 {
 	this->HeaderState = 0;
 	// post atributs
@@ -48,7 +48,7 @@ void HTTPMethod::setData()
 }
 
 // GETERS
-std::string HTTPMethod::GetRoot(const std::string &uri, const std::string &locationPath, const std::string &root)
+std::string HTTP::GetRoot(const std::string &uri, const std::string &locationPath, const std::string &root)
 {
 	std::string matchedUri = uri;
 	std::size_t locationPos = matchedUri.find(locationPath);
@@ -77,7 +77,7 @@ bool compare(std::string &Path, LocationConfig &location)
 	return false;
 }
 
-std::string HTTPMethod::getMimeType(const std::string &extension)
+std::string HTTP::getMimeType(const std::string &extension)
 {
 	if (_linker.Mime_types.find(extension) != _linker.Mime_types.end())
 		return _linker.Mime_types[extension];
@@ -85,7 +85,7 @@ std::string HTTPMethod::getMimeType(const std::string &extension)
 		return "text/plain";
 }
 
-void HTTPMethod::CheckRecvFlags()
+void HTTP::CheckRecvFlags()
 {
 	std::map<std::string, std::string>::iterator it;
 	if ((it = Request_header.find("Transfer-Encoding")) != Request_header.end() && it->second.find("chunked") != std::string::npos)
@@ -111,7 +111,7 @@ void HTTPMethod::CheckRecvFlags()
 		htype = Unknown;
 }
 
-int HTTPMethod::parseRequestHeader(std::string req)
+int HTTP::parseRequestHeader(std::string req)
 {
 	std::vector<std::string> lines;
 	std::istringstream iss(req);
@@ -153,7 +153,7 @@ bool fn(LocationConfig &x, LocationConfig &y)
 	return (x.path.length() > y.path.length());
 }
 
-bool HTTPMethod::PrepAndValidateRequest()
+bool HTTP::PrepAndValidateRequest()
 {
 	std::string uri = this->Uri;
 	const std::string NonWantedChar = " <>{}|\\^`";
@@ -265,7 +265,7 @@ LocationConfig findtLocation(const std::vector<LocationConfig> &serverLocations,
 	return _Location_Scoop;
 }
 
-bool HTTPMethod::MatchLocation()
+bool HTTP::MatchLocation()
 {
 	this->Path = this->Uri;
 	std::vector<LocationConfig> serverLocations = this->_config.locations;
@@ -289,7 +289,7 @@ bool HTTPMethod::MatchLocation()
 }
 
 // SEND RESPONSE HEADER
-std::string HTTPMethod::GenerateDirectoryList(std::string statusCode, std::string ls)
+std::string HTTP::GenerateDirectoryList(std::string statusCode, std::string ls)
 {
 	if (ls.empty())
 	{
@@ -315,7 +315,7 @@ std::string HTTPMethod::GenerateDirectoryList(std::string statusCode, std::strin
 
 // PROCCESS REQUEST
 
-void HTTPMethod::handleDirectoryRequest(int &IndexFound)
+void HTTP::handleDirectoryRequest(int &IndexFound)
 {
 	std::string IsDirectory = Uri;
 	struct stat CheckStat;
@@ -345,7 +345,7 @@ void HTTPMethod::handleDirectoryRequest(int &IndexFound)
 		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
 }
 
-void HTTPMethod::handleIndexFileRequest(int &IndexFound)
+void HTTP::handleIndexFileRequest(int &IndexFound)
 {
 	std::string indexfilepath;
 	indexfilepath = Path + '/' + _Location_Scoop.index;
@@ -358,7 +358,7 @@ void HTTPMethod::handleIndexFileRequest(int &IndexFound)
 		sendCodeResponse("404"); // Error: Index file not found
 }
 
-void HTTPMethod::handleAutoIndexRequest(const std::string &IfDir)
+void HTTP::handleAutoIndexRequest(const std::string &IfDir)
 { // Done
 	DIR *DirPtr;
 	struct dirent *Dir;
@@ -391,7 +391,7 @@ void HTTPMethod::handleAutoIndexRequest(const std::string &IfDir)
 }
 
 
-void HTTPMethod::handleFileRequest()
+void HTTP::handleFileRequest()
 {
 	struct stat st;
 	std::string file_size;
@@ -443,7 +443,7 @@ void HTTPMethod::handleFileRequest()
 	SendResponseHeader("200", mime_type, "", to_namber(file_size.c_str()));
 }
 
-void HTTPMethod::handleIndexFileExistence(std::ifstream &file)
+void HTTP::handleIndexFileExistence(std::ifstream &file)
 {
 	std::stringstream req_data;
 	req_data << file.rdbuf();
@@ -461,7 +461,7 @@ void HTTPMethod::handleIndexFileExistence(std::ifstream &file)
 		SendResponseHeader("200", mime_type, "", req_data.str().length());
 }
 
-int HTTPMethod::GET()
+int HTTP::GET()
 {
 	int IndexFound = 0;
 	struct stat CheckStat;

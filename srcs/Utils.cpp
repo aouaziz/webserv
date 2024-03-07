@@ -1,7 +1,7 @@
-#include "../includes/HTTPMethod.hpp"
+#include "../includes/HTTP.hpp"
 
 // Check for any any illegal characters in the URI
-bool HTTPMethod::ValidateURI(const std::string &uri)
+bool HTTP::ValidateURI(const std::string &uri)
 {
 	// Check if the URI starts with a leading slash ("/")
 	if (uri.empty() || uri[0] != '/')
@@ -15,7 +15,7 @@ bool HTTPMethod::ValidateURI(const std::string &uri)
 }
 
 // Check for Possible error in the Request
-bool HTTPMethod::ValidateRequest() {
+bool HTTP::ValidateRequest() {
 	// if Transfer-Encoding exist and not match [chunked]
 	// if (this->Request_header.find("Transfer-Encoding") != this->Request_header.end() && this->Request_header["Transfer-Encoding"] != "chunked")
 	// {
@@ -50,7 +50,7 @@ bool HTTPMethod::ValidateRequest() {
 }
 
 
-// int HTTPMethod::parseRequestHeader(char *req, int bytesreceived) // ß
+// int HTTP::parseRequestHeader(char *req, int bytesreceived) // ß
 // {
 // 	int delimiter_position;
 // 	char *body;
@@ -83,7 +83,7 @@ bool HTTPMethod::ValidateRequest() {
 // 	this->HeaderState = 1;
 // 	return 1;
 // }
-// int HTTPMethod::parseRequestHeader(char *req, int bytesreceived) // 
+// int HTTP::parseRequestHeader(char *req, int bytesreceived) // 
 // {
 //     int delimiter_position;
 // 	// char *body;
@@ -119,7 +119,7 @@ bool HTTPMethod::ValidateRequest() {
 // 		return this->POST(BodyPassed, bytesreceived);
 // 	return 0;
 // }
-// int HTTPMethod::check_recv_body(int bytesreceived)
+// int HTTP::check_recv_body(int bytesreceived)
 // {
 // 	static long long recbytes = 0;
 // 	if (std::stoll(this->Request_header["Content-Length"]) > recbytes)

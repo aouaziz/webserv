@@ -1,7 +1,8 @@
 NAME = webserv
 
 SRC =   ./srcs/main.cpp  ./srcs/Server.cpp ./srcs/Client.cpp ./srcs/Config.cpp ./srcs/Webserv.cpp \
-	./srcs/Linker.cpp  ./srcs/GET.cpp  ./srcs/Response.cpp ./srcs/POST.cpp ./srcs/Utils.cpp ./srcs/Cgi.cpp ./srcs/DELETE.cpp
+	./srcs/Linker.cpp  ./srcs/GET.cpp  ./srcs/Response.cpp ./srcs/POST.cpp ./srcs/Utils.cpp \
+	./srcs/Cgi.cpp ./srcs/DELETE.cpp ./srcs/HTTP.cpp\
 
 OBJ = $(SRC:.cpp=.o)
 CXX = c++

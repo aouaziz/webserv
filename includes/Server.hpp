@@ -6,6 +6,12 @@
 #include "Config.hpp"
 #include "Client.hpp"
 class Client;
+
+enum types{
+    Send = 1,
+    Recv
+};
+
 class Server {
 
     public :
@@ -16,26 +22,16 @@ class Server {
         std::string ip;
         int server_socket;
         addrinfo *servinfo;
-        int         flag;
+        int         maxfds;
         Server(const ServerConfig &serverConfig);
 
-        void CheckRequest2(std::string message,std::vector<Client>::iterator it);
-        void CheckRequest(std::string message,std::vector<Client>::iterator it);
-        void CheckBodyFinish(std::string message,std::vector<Client>::iterator it);
         void ServInit();
-        void check(int namber ,std::string error);
-        void CheckRequest(long long bytesRead,std::string message,std::vector<Client>::iterator it);
         void CreatServer();
         int AcceptClient(fd_set &fd_read);
-        int ReceivesRequest(std::vector<Client>::iterator it);
-        void CheckTime(fd_set &fd_read, fd_set &fd_write);
-        int HandleResponse(std::vector<Client>::iterator it );
-        void Isset(fd_set &fd_read,fd_set &fd_write,fd_set &fd_tread,fd_set &fd_twrite);
+        int CheckTime(fd_set &fd_read, fd_set &fd_write,int maxfd);
+        int Isset(fd_set &fd_read,fd_set &fd_write,fd_set &fd_tread,fd_set &fd_twrite,int maxfd);
         void ClearClient(fd_set &fd_read,fd_set &fd_write,std::vector<Client>::iterator &it);
         void Swapfd(int fd,fd_set &se,fd_set &cl);
-        void Reset(std::vector<Client>::iterator it);
-        void checkBody(std::vector<Client>::iterator it);
-        int handleRedirections(std::vector<Client>::iterator it);
         ~Server();
 };
 
