@@ -135,7 +135,6 @@ void HTTP::handle_chunked_post(Client *client)
 		// error
 	}
 	client->file_body.close();
-	// client->file_body.seekg(0, std::ios::beg);		 // set the cursor to the begining (just in case)
 	client->file_body.open(client->file_name.c_str(), std::ios::binary | std::ios::in);
 	this->to_erase = false;
 	process_chunked_data(client->file_body, output); // process the body and copy it to our file
@@ -217,11 +216,6 @@ int HTTP::initializeFileHandling(Client *client)
 			return 1;
 		}
 	}
-	//    if (access(PostPath.c_str(), F_OK | W_OK | R_OK) == -1)
-	// 	{
-	//         sendCodeResponse("500");
-	//         return 1;
-	//     }
 	return 0;
 }
 

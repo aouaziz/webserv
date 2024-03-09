@@ -25,7 +25,7 @@ void Server::CreatServer()
     int opt = 1;
     HandleSocketError(setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)), "SETSOCKOPT failed "); // fix bind error
     HandleSocketError(bind(server_socket, servinfo->ai_addr, servinfo->ai_addrlen), "bind failed");
-    HandleSocketError(listen(server_socket, FD_SETSIZE), "listen failed");
+    HandleSocketError(listen(server_socket, SOMAXCONN), "listen failed");
     freeaddrinfo(servinfo);
 }
 
@@ -79,30 +79,22 @@ int Server::Isset(fd_set &fd_read, fd_set &fd_write, fd_set &fd_tread, fd_set &f
                 ClearClient(fd_read, fd_write, it);
                 continue;
             }
-            if (it->finish_request == 1 || it->request->Request_header["stop_receiving"] == "true")
+            if (it->finish_request == true)
             {
                 Swapfd(client_fd, fd_write, fd_read);
             }
         }
         else if (FD_ISSET(client_fd, &fd_twrite) && it->request->response_ready == true)
         {
-            if (it->HandleResponse() || it->request->Request_header["stop_receiving"] == "true")
+            if (it->HandleResponse())
             {
                 ClearClient(fd_read, fd_write, it);
                 continue;
             }
             if (it->finish_response)
             {
-                
-                if (it->request->Request_header["Connection"] == "close")
-                {
-
-                    ClearClient(fd_read, fd_write, it);
-                    continue;
-                }
                 Swapfd(client_fd, fd_read, fd_write);
                 it->ResetClient();
-
             }
         }
         else if (time(NULL) - it->cliantime > 120)

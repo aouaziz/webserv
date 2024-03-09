@@ -139,7 +139,7 @@ Linker::Linker()
 	this->Status_codes_error["411"] = "Length Required";
 	this->Status_codes_error["412"] = "Precondition Failed";
 	this->Status_codes_error["413"] = "Payload Too Large";
-	this->Status_codes_error["414"] = "URI Too Long";
+	this->Status_codes_error["414"] = "Url Too Long";
 	this->Status_codes_error["415"] = "Unsupported Media Type";
 	this->Status_codes_error["416"] = "Range Not Satisfiable";
 	this->Status_codes_error["417"] = "Expectation Failed";

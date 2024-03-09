@@ -45,8 +45,6 @@ std::string Cgi::check_ext(std::string ext)
 
     while (it != this->_config.cgi_ext.end())
     {
-        // std::cout << " ext :  " << it->first << ", path " << it->second << std::endl;
-
         if (ext == it->first)
             return it->second;
         ++it;
@@ -83,7 +81,6 @@ std::vector<std::string> Cgi::get_env(const std::string &file_path)
 int Cgi::execute_cgi(std::string file_path, std::string ext)
 {
     std::string cgi_path = check_ext(ext.substr(1));
-    // std::cout << "CGI START " << std::endl;
 
     if (cgi_path.empty())
     {

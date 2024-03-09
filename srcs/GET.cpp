@@ -1,63 +1,8 @@
 #include "../includes/HTTP.hpp"
 
-HTTP::HTTP(ServerConfig serverConfig)
-{
-	this->_config = serverConfig;
-	this->response_ready = false;
-	this->_linker = Linker();
-	HeaderState = 0;
-	BodyLength = 0;
-	htype = 0;
-	this->requested_file_fd = -1;
-	this->is_header_sent = false;
-}
 
-HTTP::~HTTP()
-{
-}
 
-void HTTP::replaceCarriageReturn(std::string &inputString)
-{
-	size_t found = inputString.find('\r');
-
-	while (found != std::string::npos)
-	{ // replace all '\r' with ' '
-		inputString.erase(found, 1);
-		found = inputString.find('\r', found + 1);
-	}
-}
-
-// SETTERS
-void HTTP::setConfig(ServerConfig &config)
-{
-	this->_config = config;
-}
-
-void HTTP::setData()
-{
-	this->HeaderState = 0;
-	// post atributs
-	this->AmountRecv = 0;
-	this->PostFd = 0;
-	this->PostPath = "";
-	this->MimeType = "";
-	this->HexaChunkStatus = 0;
-	this->ChunkSize = 0;
-	this->ChunkHexStr = "";
-	// this->BodyLength = 0;
-}
-
-// GETERS
-std::string HTTP::GetRoot(const std::string &uri, const std::string &locationPath, const std::string &root)
-{
-	std::string matchedUri = uri;
-	std::size_t locationPos = matchedUri.find(locationPath);
-	if (locationPos != std::string::npos)
-		matchedUri.replace(locationPos, locationPath.length(), root + "/");
-	return matchedUri;
-}
-
-bool compare(std::string &Path, LocationConfig &location)
+bool HTTP::compare(std::string &Path, LocationConfig &location)
 {
 	size_t it = 0;
 	size_t size_Path = Path.size();
@@ -85,7 +30,7 @@ std::string HTTP::getMimeType(const std::string &extension)
 		return "text/plain";
 }
 
-void HTTP::CheckRecvFlags()
+void HTTP::RequestType()
 {
 	std::map<std::string, std::string>::iterator it;
 	if ((it = Request_header.find("Transfer-Encoding")) != Request_header.end() && it->second.find("chunked") != std::string::npos)
@@ -97,196 +42,11 @@ void HTTP::CheckRecvFlags()
 		htype = ContentLength;
 		BodyLength = to_namber(it->second.c_str());
 	}
-	else if ((it = Request_header.find("Content-Type")) != Request_header.end() && it->second.find("multipart/form-data") != std::string::npos)
-	{
-		htype = MultipartFormData;
-		size_t semiPos = it->second.find(';');
-		if (semiPos != std::string::npos)
-		{
-			boundary = it->second.substr(semiPos + 1);
-			boundary.append("--");
-		}
-	}
 	else
 		htype = Unknown;
 }
 
-int HTTP::parseRequestHeader(std::string req)
-{
-	std::vector<std::string> lines;
-	std::istringstream iss(req);
-	std::string line;
-	while (std::getline(iss, line))
-	{
-		replaceCarriageReturn(line);
-		lines.push_back(line);
-	}
 
-	std::istringstream first_line_iss(lines[0]);
-
-	first_line_iss >> this->Method >> this->Uri >> this->Version;
-	size_t pos = this->Uri.find("?");
-	if (pos != std::string::npos)
-	{
-		this->query = this->Uri.substr(pos + 1);
-		this->Uri = this->Uri.substr(0, pos);
-	}
-	for (size_t i = 1; i < lines.size(); i++)
-	{
-		std::string header_line = lines[i];
-		size_t colon_pos = header_line.find(':');
-		if (colon_pos != std::string::npos)
-		{
-			std::string key = header_line.substr(0, colon_pos);
-			std::string value = header_line.substr(colon_pos + 2); // +2 to skip ':' and space
-			Request_header.insert(std::make_pair(key, value));
-		}
-	}
-	CheckRecvFlags();
-	if (this->PrepAndValidateRequest() || this->Method == "GET" || this->Method == "DELETE")
-		return 1;
-	return 0;
-}
-
-bool fn(LocationConfig &x, LocationConfig &y)
-{
-	return (x.path.length() > y.path.length());
-}
-
-bool HTTP::PrepAndValidateRequest()
-{
-	std::string uri = this->Uri;
-	const std::string NonWantedChar = " <>{}|\\^`";
-
-	if (uri.empty())
-	{
-		sendCodeResponse("400");
-		return true;
-	}
-	if (Uri.find("..") != std::string::npos)
-	{
-		sendCodeResponse("403");
-		return true;
-	}
-	if (Uri.length() > 2048)
-	{
-		sendCodeResponse("414");
-		return true;
-	}
-	if (uri.find_first_of(NonWantedChar) != std::string::npos)
-	{
-		sendCodeResponse("400");
-		return true;
-	}
-
-	if (Method != "GET" && Method != "POST" && Method != "DELETE")
-	{
-		sendCodeResponse("501");
-		return true;
-	}
-	if (Version != "HTTP/1.1")
-	{
-		sendCodeResponse("505");
-		return true;
-	}
-	if (this->Method == "POST")
-	{
-		if (this->htype == ContentLength && this->BodyLength == 0)
-		{
-			sendCodeResponse("400");
-			return true;
-		}
-		else if (this->htype == Unknown)
-		{
-			sendCodeResponse("411");
-			return true;
-		}
-	}
-	this->Path = this->Uri;
-	std::vector<LocationConfig> serverLocations = this->_config.locations;
-	size_t i = 0;
-	if (this->Uri.find('?') != std::string::npos)
-		Path = this->Uri.substr(0, this->Uri.find('?'));
-	std::sort(serverLocations.begin(), serverLocations.end(), fn);
-	for (i = 0; i < serverLocations.size(); i++)
-	{
-		if (compare(Path, serverLocations[i]))
-		{
-			this->_Location_Scoop = serverLocations[i];
-			break;
-		}
-	}
-	if (i == serverLocations.size())
-	{
-		this->sendCodeResponse("404");
-		return true;
-	}
-	std::vector<std::string> methods_of_location = this->_Location_Scoop.methods;
-	std::vector<std::string>::iterator it;
-	bool methodFound = false;
-
-	for (it = methods_of_location.begin(); it != methods_of_location.end(); ++it)
-	{
-		if (*it == this->Method)
-		{
-			methodFound = true;
-			break;
-		}
-	}
-	if (!methodFound)
-	{
-		std::cout << "Method not allowed2" << std::endl;
-		this->sendCodeResponse("405");
-		return true;
-	}
-	Path = GetRoot(this->Path, this->_Location_Scoop.path, this->_Location_Scoop.root);
-	return false;
-}
-
-bool isMethodAllowed(const std::vector<std::string> &allowedMethods, const std::string &method)
-{
-	return (std::find(allowedMethods.begin(), allowedMethods.end(), method) != allowedMethods.end());
-}
-
-LocationConfig findtLocation(const std::vector<LocationConfig> &serverLocations, const std::string &Path)
-{
-	LocationConfig _Location_Scoop;
-	for (size_t i = 0; i < serverLocations.size(); i++)
-	{
-		size_t j = 0;
-		while (j < Path.size() && j < serverLocations[i].path.size() && Path[j] == serverLocations[i].path[j])
-			j++;
-		if ((j == Path.size() && j == serverLocations[i].path.size()) || (j == serverLocations[i].path.size() && ((j < Path.size() && Path[j] == '/') || (j > 0 && Path[j - 1] == '/'))))
-		{
-			_Location_Scoop = serverLocations[i];
-			break;
-		}
-	}
-	return _Location_Scoop;
-}
-
-bool HTTP::MatchLocation()
-{
-	this->Path = this->Uri;
-	std::vector<LocationConfig> serverLocations = this->_config.locations;
-	size_t i = 0;
-	if (this->Uri.find('?') != std::string::npos)
-		Path = this->Uri.substr(0, this->Uri.find('?'));
-	this->_Location_Scoop = findtLocation(serverLocations, Path);
-
-	if (i == serverLocations.size())
-	{
-		this->sendCodeResponse("404");
-	}
-	if (!isMethodAllowed(this->_Location_Scoop.methods, this->Method))
-	{
-		std::cout << "Method not allowed" << std::endl;
-		this->sendCodeResponse("405");
-		return 0;
-	}
-	Path = GetRoot(this->Path, this->_Location_Scoop.path, this->_Location_Scoop.root); // get the right path for the file requested
-	return 1;
-}
 
 // SEND RESPONSE HEADER
 std::string HTTP::GenerateDirectoryList(std::string statusCode, std::string ls)
@@ -317,7 +77,7 @@ std::string HTTP::GenerateDirectoryList(std::string statusCode, std::string ls)
 
 void HTTP::handleDirectoryRequest(int &IndexFound)
 {
-	std::string IsDirectory = Uri;
+	std::string IsDirectory = Url;
 	struct stat CheckStat;
 
 	if ((stat(Path.c_str(), &CheckStat)) == 0) // if file found
@@ -465,7 +225,7 @@ int HTTP::GET()
 {
 	int IndexFound = 0;
 	struct stat CheckStat;
-	if (stat(Path.c_str(), &CheckStat) == 0) // if file found
+	if (!stat(Path.c_str(), &CheckStat)) // if file found
 	{
 		if (CheckStat.st_mode & S_IFDIR)		// if directory
 			handleDirectoryRequest(IndexFound); // handle directory
@@ -473,8 +233,6 @@ int HTTP::GET()
 			handleFileRequest();				// handle file
 	}
 	else
-	{
 		sendCodeResponse("404"); // Error: File not found
-	}
 	return 0;
 }

@@ -20,6 +20,7 @@ public:
     bool  response_ready;
     bool finish_request;
     bool finish_header;
+    bool ConnectionClose;
     struct sockaddr_in new_addr;
     int addrlen ;
     size_t BodySize;
@@ -39,12 +40,12 @@ public:
     // recv request
     int     ReceivesRequest();
     int     handleRedirections();
-    void    checkBody();
-    void    CheckRequest2(std::string message);
+    void    ProcessAndValidateBody();
+    void    HandleRequestBody(std::string message);
     // send response
     int     HandleResponse();
     void    ResetClient();
-    void	create_file(MapOf_Str_Str	&Request_header);
+    void	GenerateRequestFile(MapOf_Str_Str	&Request_header);
     void    delete_file();
 
     bool handelSendAndRecv(int type, int namber);

@@ -7,6 +7,7 @@ Client::Client(ServerConfig serverConfig)
     finish_response = false;
     finish_request = false;
     finish_header = false;
+    ConnectionClose = false;
     response_ready = false;
     addrlen = sizeof(new_addr);
     BodySize = 0;
@@ -20,7 +21,7 @@ Client::~Client()
     delete this->request;
 }
 
-void	Client::create_file(MapOf_Str_Str	&Request_header)
+void	Client::GenerateRequestFile(MapOf_Str_Str	&Request_header)
 {
     std::string MimeType;
     Linker linker;
@@ -82,7 +83,8 @@ void Client::ResetClient()
     finish_response = false;
     response_ready = false;
     finish_request = false;
-    finish_header = false; 
+    finish_header = false;
+    ConnectionClose = false; 
     requestHeader = "";
     requestBody = "";
     response.clear();
@@ -91,7 +93,7 @@ void Client::ResetClient()
     if (file_body.is_open())
         file_body.close();
 }
-void Client::checkBody()
+void Client::ProcessAndValidateBody()
 {
     BodySize += requestBody.size();
     if (BodySize > to_namber(request->_Location_Scoop.client_max_body_size.c_str()))
@@ -101,17 +103,16 @@ void Client::checkBody()
         unlink(file_name.c_str());
         finish_request = true;
         request->response_ready = true;
-        request->Request_header["stop_receiving"] = "true";
+        request->requested_file_fd = -1;      
         return ;
     }
     file_body << requestBody;
     if (file_body.fail())
     {
-        std::cerr << "Error: failed to write to file " << std::endl;
         request->sendCodeResponse("500");
         finish_request = true;
         request->response_ready = true;
-        request->Request_header["stop_receiving"] = "true";
+        request->requested_file_fd = -1;      
         return;
     }
     if (request->htype == ContentLength && BodySize == request->BodyLength)
@@ -129,7 +130,7 @@ void Client::checkBody()
     }
 }
 
-void Client::CheckRequest2(std::string message)
+void Client::HandleRequestBody(std::string message)
 {
     if (!finish_header)
     {
@@ -137,29 +138,29 @@ void Client::CheckRequest2(std::string message)
         size_t endOfHeaders = message.find("\r\n\r\n");
         requestBody = message.substr(endOfHeaders + 4);
         requestHeader = message.substr(0, endOfHeaders);
-        finish_request = request->parseRequestHeader(requestHeader);
+        finish_request = request->Request(requestHeader);
+        if(request->Request_header["Connection"] == "close")
+            ConnectionClose = true;
         if (finish_request)
             return;
-
-        create_file(request->Request_header);
+        GenerateRequestFile(request->Request_header);
     }
     else
         requestBody = message;
-
-    checkBody();
+    ProcessAndValidateBody();
 }
 
 int Client::ReceivesRequest()
 {
     int clientfd = clien_socket;
-    std::vector<char> buffer(BUFSIZE);
-    int bytesRead = recv(clientfd, buffer.data(), buffer.size(), 0);
+    char buffer[BUFSIZE];
+    int bytesRead = recv(clientfd, buffer, BUFSIZ, 0);
     if(handelSendAndRecv(Recv, bytesRead))
             return -1;
     cliantime = time(NULL);
-    std::string header(buffer.begin(), buffer.begin() + bytesRead);
+    std::string header(buffer);
     header.resize(bytesRead);
-    CheckRequest2(header);
+    HandleRequestBody(header);
 
     if (finish_request && !request->response_ready)
     {
@@ -227,6 +228,8 @@ int Client::HandleResponse()
         request->is_header_sent = true;
         if (request->requested_file_fd == -1) // requested_file_fd is -1 when there is no body to send
             finish_response = true;
+        if(ConnectionClose ==true )
+            return -1;
         return 0;
     }
     char buff[BUFSIZE];

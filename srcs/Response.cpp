@@ -11,7 +11,7 @@ void    appendHeader(std::stringstream& header, const std::string& name, const s
 
     }
 }
-void HTTP::   SendResponseHeader(std::string CodeToSend, std::string Extention, std::string location, int Content_Length) // send Response header
+void HTTP::SendResponseHeader(std::string CodeToSend, std::string Extention, std::string location, int Content_Length) // send Response header
 {
     std::stringstream header;
     std::string date = this->_linker.getDate();

@@ -10,7 +10,6 @@ enum ContentType
 {
 	Chunk = 1,
 	ContentLength,
-	MultipartFormData,
 	Unknown
 };
 
@@ -25,7 +24,7 @@ public:
 	Linker _linker;
 
 	std::string Path;
-	std::string Uri;
+	std::string Url;
 	std::string query;
 	std::string Method;
 	std::string Version;
@@ -35,6 +34,7 @@ public:
 	std::string Response;
 	int HeaderState;
 	bool response_ready;
+	bool valid_header;
 	char req_data[BUFSIZE];
 	int client_socket;
 	char *BodyPassed;
@@ -55,14 +55,9 @@ public:
 	// METHODS
 	HTTP(ServerConfig serverConfig);
 	~HTTP();
-	void CheckRecvFlags();
-	void setData();
-	void setConfig(ServerConfig &config);
+	void RequestType();
 	void replaceCarriageReturn(std::string &inputString);
-	int parseRequestHeader(std::string req);
-	bool PrepAndValidateRequest();
-	std::string GetRoot(const std::string &uri, const std::string &locationPath, const std::string &root);
-	bool MatchLocation();
+	std::string GetRoot(const std::string &Url, const std::string &locationPath, const std::string &root);
 	void SendResponseHeader(std::string statusCode, std::string fileExt, std::string location, int contentLength);
 	void sendCodeResponse(std::string CodeToSend);
 	std::string GenerateDirectoryList(std::string statusCode, std::string ls);
@@ -75,8 +70,6 @@ public:
 	void handleFileRequest();
 	std::string getMimeType(const std::string &extension);
 	void handleIndexFileExistence(std::ifstream &file);
-	bool ValidateRequest();
-	bool ValidateURI(const std::string &uri);
 	// POST METHODS
 	void closeFileAndSendResponse();
 	int handleContentLength(const char *body, int bytesreceived, int &StatValue);
@@ -91,5 +84,14 @@ public:
 	int check_and_process_remaining(std::string &data, size_t &chunk_size, std::ofstream &output);
 	int erase(std::string &data, size_t &chunk_size);
 	void ResetMethod();
-
+	bool compare(std::string &Path, LocationConfig &location);
+	//Request
+	int Request(const std::string& req);
+	void StorRequestFirstLine(const std::string& line);
+	void StorRequestHeaders(const std::vector<std::string> &lines);
+	bool CheckRequestForm();
+	bool CheckRequestHeaders();
+	bool CheckUrlState();
+	bool RequestMethod();
+	bool IsMethodAllowedInLocation();
 };
