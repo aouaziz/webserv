@@ -24,8 +24,8 @@ bool HTTP::compare(std::string &Path, LocationConfig &location)
 
 std::string HTTP::getMimeType(const std::string &extension)
 {
-	if (_linker.Mime_types.find(extension) != _linker.Mime_types.end())
-		return _linker.Mime_types[extension];
+	if (_linker.File_extensions.find(extension) != _linker.File_extensions.end())
+		return _linker.File_extensions[extension];
 	else
 		return "text/plain";
 }
@@ -75,35 +75,35 @@ std::string HTTP::GenerateDirectoryList(std::string statusCode, std::string ls)
 
 // PROCCESS REQUEST
 
-void HTTP::handleDirectoryRequest(int &IndexFound)
-{
-	std::string IsDirectory = Url;
-	struct stat CheckStat;
+// void HTTP::handleDirectoryRequest(int &IndexFound)
+// {
+// 	std::string IsDirectory = Url;
+// 	struct stat CheckStat;
 
-	if ((stat(Path.c_str(), &CheckStat)) == 0) // if file found
-	{
-		if (CheckStat.st_mode & S_IFDIR) // if directory
-		{
-			if (IsDirectory[IsDirectory.length() - 1] != '/')
-				IsDirectory += '/';
-			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
-				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
-		}
-		else if (CheckStat.st_mode & S_IFREG) // if regular file
-		{
-			if (IsDirectory[IsDirectory.length() - 1] != '/')
-				IsDirectory += '/';
-			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
-				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
-		}
-	}
-	if (_Location_Scoop.index.empty() == 0)	 // if index file is set
-		handleIndexFileRequest(IndexFound);	 // handle index file
-	else if (_Location_Scoop.autoindex == 1) // if autoindex is enabled
-		handleAutoIndexRequest(IsDirectory); // handle autoindex
-	else
-		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
-}
+// 	if ((stat(Path.c_str(), &CheckStat)) == 0) // if file found
+// 	{
+// 		if (CheckStat.st_mode & S_IFDIR) // if directory
+// 		{
+// 			if (IsDirectory[IsDirectory.length() - 1] != '/')
+// 				IsDirectory += '/';
+// 			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
+// 				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
+// 		}
+// 		else if (CheckStat.st_mode & S_IFREG) // if regular file
+// 		{
+// 			if (IsDirectory[IsDirectory.length() - 1] != '/')
+// 				IsDirectory += '/';
+// 			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
+// 				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
+// 		}
+// 	}
+// 	if (_Location_Scoop.index.empty() == 0)	 // if index file is set
+// 		handleIndexFileRequest(IndexFound);	 // handle index file
+// 	else if (_Location_Scoop.autoindex == 1) // if autoindex is enabled
+// 		handleAutoIndexRequest(IsDirectory); // handle autoindex
+// 	else
+// 		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
+// }
 
 void HTTP::handleIndexFileRequest(int &IndexFound)
 {
@@ -209,7 +209,7 @@ void HTTP::handleIndexFileExistence(std::ifstream &file)
 	req_data << file.rdbuf();
 	file.close();
 	std::string extension = Path.substr(Path.find_last_of('.'));
-	std::string mime_type = _linker.Mime_types[extension];
+	std::string mime_type = _linker.File_extensions[extension];
 	Request_header["body"] = req_data.str();
 	if (req_data.str().empty())
 		Request_header["content-length"] = "0";

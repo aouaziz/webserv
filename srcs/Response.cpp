@@ -35,7 +35,6 @@ std::string     readFileIntoString(const std::string& filename)
     std::cout << filename << std::endl;
     if (file)
     {
-        std::cout << "lol" << std::endl;
         std::stringstream req_data;
         req_data << file.rdbuf();
         file.close();
@@ -67,12 +66,10 @@ std::string         generateErrorPage(std::string CodeToSend, std::string status
 
 void HTTP::   sendCodeResponse(std::string CodeToSend) 
 {
-    std::cout << "sendCodeResponse " << CodeToSend << std::endl;
     std::string Content;
     std::string filename;
     if (this->_config.common.error_pages.find(CodeToSend) != this->_config.common.error_pages.end())
     {
-        std::cout << "found" << std::endl;
         filename = this->_config.common.error_pages[CodeToSend];
         Content = readFileIntoString(filename);
     }
