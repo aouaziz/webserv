@@ -94,4 +94,5 @@ public:
 	bool CheckUrlState();
 	bool RequestMethod();
 	bool IsMethodAllowedInLocation();
+	void  RendRedirectResponse(std::string CodeToSend, std::string location);
 };

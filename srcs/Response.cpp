@@ -63,17 +63,31 @@ std::string         generateErrorPage(std::string CodeToSend, std::string status
     return res;
 }
 
-
-void HTTP::   sendCodeResponse(std::string CodeToSend) 
+void  HTTP::RendRedirectResponse(std::string CodeToSend, std::string location)
+{
+    std::stringstream header;
+    appendHeader(header, "", "HTTP/1.1 " + CodeToSend + " " + this->_linker.Status_codes_error[CodeToSend]);
+    appendHeader(header, "Location", location);
+    header << "Connection: keep-alive\r\n";
+    header << "\r\n";
+    Response = header.str();
+    response_ready = true;
+}
+void HTTP::sendCodeResponse(std::string CodeToSend) 
 {
     std::string Content;
     std::string filename;
-    if (this->_config.common.error_pages.find(CodeToSend) != this->_config.common.error_pages.end())
+    if(CodeToSend == "301")
+    {
+        RendRedirectResponse(CodeToSend,Url);
+        return ;
+    }
+    if (this->_config.common.error_pages.find(CodeToSend) != this->_config.common.error_pages.end() && this->_config.common.error_pages[CodeToSend] != "")
     {
         filename = this->_config.common.error_pages[CodeToSend];
         Content = readFileIntoString(filename);
     }
-    if (Content.empty())
+    else// if Error code not found in conf
     {
         std::string statusMessage = this->_linker.Status_codes_error[CodeToSend];
         Content = generateErrorPage(CodeToSend, statusMessage, filename);
@@ -81,5 +95,5 @@ void HTTP::   sendCodeResponse(std::string CodeToSend)
     this->Request_header["body"] = Content;
     this->Request_header["Content-Type"] = "text/html";
     this->Request_header["Content-Length"] = to_string(Content.length());
-    SendResponseHeader(CodeToSend, ".html", "", Content.length());
+    SendResponseHeader(CodeToSend, "text/html", "", Content.length());
 }

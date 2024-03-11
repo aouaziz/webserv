@@ -52,56 +52,6 @@ Linker::Linker()
 	this->File_extensions["application/x-httpd-php"] = ".php";
 	this->File_extensions["video/quicktime"] = ".mov";
 
-	// MIME Types
-	this->Mime_types[".html"]	= "text/html";
-	this->Mime_types[".htm"]	= "text/html";
-	this->Mime_types[".css"]	= "text/css";
-	this->Mime_types[".js"]		= "application/javascript";
-	this->Mime_types[".json"]	= "application/json";
-	this->Mime_types[".xml"]	= "application/xml";
-	this->Mime_types[".txt"]	= "text/plain";
-	this->Mime_types[".jpg"]	= "image/jpeg";
-	this->Mime_types[".jpeg"]	= "image/jpeg";
-	this->Mime_types[".png"]	= "image/png";
-	this->Mime_types[".gif"]	= "image/gif";
-	this->Mime_types[".bmp"]	= "image/bmp";
-	this->Mime_types[".ico"]	= "image/x-icon";
-	this->Mime_types[".pdf"]	= "application/pdf";
-	this->Mime_types[".zip"]	= "application/zip";
-	this->Mime_types[".tar"]	= "application/x-tar";
-	this->Mime_types[".gz"]		= "application/gzip";
-	this->Mime_types[".rar"]	= "application/x-rar-compressed";
-	this->Mime_types[".7z"]		= "application/x-7z-compressed";
-	this->Mime_types[".mp3"]	= "audio/mpeg";
-	this->Mime_types[".wav"]	= "audio/wav";
-	this->Mime_types[".mp4"]	= "video/mp4";
-	this->Mime_types[".avi"]	= "video/x-msvideo";
-	this->Mime_types[".ppt"]	= "application/vnd.ms-powerpoint";
-	this->Mime_types[".pptx"]	= "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	this->Mime_types[".doc"]	= "application/msword";
-	this->Mime_types[".docx"]	= "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	this->Mime_types[".xls"]	= "application/vnd.ms-excel";
-	this->Mime_types[".xlsx"]	= "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	this->Mime_types[".csv"]	= "text/csv";
-	this->Mime_types[".swf"]	= "application/x-shockwave-flash";
-	this->Mime_types[".svg"]	= "image/svg+xml";
-	this->Mime_types[".mpg"]	= "video/mpeg";
-	this->Mime_types[".mpeg"]	= "video/mpeg";
-	this->Mime_types[".webm"]	= "video/webm";
-	this->Mime_types[".ogg"]	= "audio/ogg";
-	this->Mime_types[".ogg"]	= "video/ogg";
-	this->Mime_types[".webp"]	= "image/webp";
-	this->Mime_types[".tif"]	= "image/tiff";
-	this->Mime_types[".tiff"]	= "image/tiff";
-	this->Mime_types[".woff"]	= "application/font-woff";
-	this->Mime_types[".woff2"]	= "application/font-woff2";
-	this->Mime_types[".ttf"]	= "application/x-font-ttf";
-	this->Mime_types[".otf"]	= "application/x-font-opentype";
-	this->Mime_types[".eot"]	= "application/vnd.ms-fontobject";
-	this->Mime_types[".bin"]	= "application/octet-stream";
-	this->Mime_types[".php"]	= "application/x-httpd-php";
-	this->Mime_types[".pl"]		= "application/x-perl";
-	this->Mime_types[".mov"]	= "video/quicktime";
 
 	// Status codes
 	this->Status_codes_error["100"] = "Continue";

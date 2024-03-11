@@ -36,7 +36,7 @@ void HTTP::replaceCarriageReturn(std::string &inputString)
 void HTTP::StorRequestFirstLine(const std::string& line) {
   std::istringstream iss(line);
   iss >> Method >> Url >> Version;
-  size_t pos = this->Url.find("?");// need to be explained
+  size_t pos = this->Url.find("?");//query
 	if (pos != std::string::npos)
 	{
 		this->query = this->Url.substr(pos + 1);
@@ -59,7 +59,7 @@ void HTTP::StorRequestHeaders(const std::vector<std::string>& lines)
     else
       valid_header = true;
 	}
-  RequestType();
+  	RequestType();
 }
 
 bool HTTP::CheckRequestForm()
@@ -119,8 +119,6 @@ bool HTTP::CheckUrlState()
 	this->Path = this->Url;// need to be explained 
 	std::vector<LocationConfig> serverLocations = this->_config.locations;
 	size_t i = 0;
-	if (this->Url.find('?') != std::string::npos)
-		Path = this->Url.substr(0, this->Url.find('?'));
 	std::sort(serverLocations.begin(), serverLocations.end(), fn);
 	for (i = 0; i < serverLocations.size(); i++)
 	{
@@ -164,9 +162,12 @@ bool HTTP::IsMethodAllowedInLocation()
 std::string HTTP::GetRoot(const std::string &Url, const std::string &locationPath, const std::string &root)
 {
 	std::string matchedUri = Url;
+	std::string newroot =root;
 	std::size_t locationPos = matchedUri.find(locationPath);
+	if(newroot[newroot.size() -1] != '/')
+		newroot = newroot + "/";
 	if (locationPos != std::string::npos)
-		matchedUri.replace(locationPos, locationPath.length(), root + "/");
+		matchedUri.replace(locationPos, locationPath.length(), newroot);
 	return matchedUri;
 }
 
