@@ -5,7 +5,6 @@ HTTP::HTTP(ServerConfig serverConfig)
 	this->_config = serverConfig;
 	this->response_ready = false;
 	valid_header = false;
-	this->_linker = Linker();
 	HeaderState = 0;
 	BodyLength = 0;
 	htype = 0;
@@ -40,52 +39,14 @@ void HTTP::ResetMethod()
     is_header_sent = false;
 }
 
-
-
-void HTTP::handleDirectoryRequest(int &IndexFound)
+int HTTP::prepapreHeaders(Client *client)
 {
-    std::cout << "URL : " << Url << '\n';
-	if (Url[Url.length() - 1] != '/')
-    {
-		Url += '/';
-        sendCodeResponse("301");
-        return;
-    }
-	if (!_Location_Scoop.index.empty())	 // if index file is set
-		handleIndexFileRequest(IndexFound);	 // handle index file
-	else if (_Location_Scoop.autoindex == 1) // if autoindex is enabled
-		handleAutoIndexRequest(Url); // handle autoindex
-	else
-		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
+	std::string extension = Path.substr(Path.find_last_of('.'));
+	// std::string mime_type = getMimeType(extension);
+	Request_header["ext"] = extension;
+	Request_header["query"] = this->query;
+	Request_header["method"] = this->Method;
+	Request_header["body_file"] = client->file_name;
+
+	return 2;
 }
-
-
-// void HTTP::handleDirectoryRequest(int &IndexFound)
-// {
-// 	std::string IsDirectory = Url;
-// 	struct stat CheckStat;
-
-// 	if ((stat(Path.c_str(), &CheckStat)) == 0) // if file found
-// 	{
-// 		if (CheckStat.st_mode & S_IFDIR) // if directory
-// 		{
-// 			if (IsDirectory[IsDirectory.length() - 1] != '/')
-// 				IsDirectory += '/';
-// 			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
-// 				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
-// 		}
-// 		else if (CheckStat.st_mode & S_IFREG) // if regular file
-// 		{
-// 			if (IsDirectory[IsDirectory.length() - 1] != '/')
-// 				IsDirectory += '/';
-// 			else if (IsDirectory[IsDirectory.length() - 1] == '/' && IsDirectory.length() > 1)
-// 				IsDirectory = IsDirectory.substr(0, IsDirectory.length() - 1);
-// 		}
-// 	}
-// 	if (_Location_Scoop.index.empty() == 0)	 // if index file is set
-// 		handleIndexFileRequest(IndexFound);	 // handle index file
-// 	else if (_Location_Scoop.autoindex == 1) // if autoindex is enabled
-// 		handleAutoIndexRequest(IsDirectory); // handle autoindex
-// 	else
-// 		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
-// }

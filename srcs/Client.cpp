@@ -21,26 +21,6 @@ Client::~Client()
     delete this->request;
 }
 
-void	Client::GenerateRequestFile(MapOf_Str_Str	&Request_header)
-{
-    std::string MimeType;
-    Linker linker;
-    if (Request_header.find("Content-Type") != Request_header.end())
-	{
-		size_t SecPosition = Request_header["Content-Type"].find(';'); // Find the position of the first ';'
-		if (SecPosition != std::string::npos)
-			MimeType = Request_header["Content-Type"].substr(0, SecPosition); // Get the MIME type
-		else
-			MimeType = Request_header["Content-Type"]; // Get the MIME type
-	}
-    std::string ext = linker.File_extensions[MimeType];
-    std::string path = this->request->_Location_Scoop.root;
-    if (path[path.length() - 1] != '/')
-        path += "/";
-    this->file_name = linker.RandomFileName(path, ext);
-    this->file_body.open(this->file_name.c_str(), std::ios::out | std::ios::in | std::ios::binary | std::ios::app);
-}
-
 void    Client::delete_file()
 {
     if (this->file_body.is_open())
@@ -98,7 +78,7 @@ void Client::ProcessAndValidateBody()
     BodySize += requestBody.size();
     if (BodySize > to_namber(request->_Location_Scoop.client_max_body_size.c_str()))
     {
-        request->sendCodeResponse("413"); // Entity too large
+        //sendCodeResponse("413"); // Entity too large
         file_body.close();
         unlink(file_name.c_str());
         finish_request = true;
@@ -109,7 +89,7 @@ void Client::ProcessAndValidateBody()
     file_body << requestBody;
     if (file_body.fail())
     {
-        request->sendCodeResponse("500");
+        //sendCodeResponse("500");
         finish_request = true;
         request->response_ready = true;
         request->requested_file_fd = -1;      
@@ -149,7 +129,25 @@ void Client::HandleRequestBody(std::string message)
         requestBody = message;
     ProcessAndValidateBody();
 }
-
+void	Client::GenerateRequestFile(MapOf_Str_Str	&Request_header)
+{
+    std::string MimeType;
+    // Linker linker;
+    if (Request_header.find("Content-Type") != Request_header.end())
+	{
+		size_t SecPosition = Request_header["Content-Type"].find(';'); // Find the position of the first ';'
+		if (SecPosition != std::string::npos)
+			MimeType = Request_header["Content-Type"].substr(0, SecPosition); // Get the MIME type
+		else
+			MimeType = Request_header["Content-Type"]; // Get the MIME type
+	}
+    // std::string ext = linker.File_extensions[MimeType];
+    std::string path = this->request->_Location_Scoop.root;
+    if (path[path.length() - 1] != '/')
+        path += "/";
+    // this->file_name = linker.RandomFileName(path, ext);
+    this->file_body.open(this->file_name.c_str(), std::ios::out | std::ios::in | std::ios::binary | std::ios::app);
+}
 int Client::ReceivesRequest()
 {
     int clientfd = clien_socket;
@@ -164,8 +162,8 @@ int Client::ReceivesRequest()
 
     if (finish_request && !request->response_ready)
     {
-        if (handleRedirections())
-            return 0;
+        // if (handleRedirections())
+        //     return 0;
         if (request->Method == "GET")
             return request->GET();
         else if (request->Method == "POST")
@@ -191,27 +189,6 @@ bool Client::handelSendAndRecv(int type, int namber)
     return true;
   }
   return false;
-}
-
-int Client::handleRedirections()
-{
-    if (request->_Location_Scoop.redir.first != -1)
-    {
-        std::string code = to_string(request->_Location_Scoop.redir.first);
-        std::string url = request->_Location_Scoop.redir.second;
-        if (!request->_Location_Scoop.redir.second.empty())
-        {
-            request->Response = "HTTP/1.1 " + code + " " + request->_linker.Status_codes_error[code] + "\r\n";
-            request->Response.append("Location: ");
-            request->Response.append(url + "\r\n");
-            request->Response.append("\r\n");
-            finish_response = true;
-        }
-        else
-            request->sendCodeResponse(code);
-        return 1;
-    }
-    return 0;
 }
 
 

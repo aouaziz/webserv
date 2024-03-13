@@ -1,9 +1,5 @@
 #include "../includes/HTTP.hpp"
 
-bool fn(LocationConfig &x, LocationConfig &y)
-{
-	return (x.path.length() > y.path.length());
-}
 
 int HTTP::Request(const std::string& req)
 {
@@ -61,11 +57,27 @@ void HTTP::StorRequestHeaders(const std::vector<std::string>& lines)
 	}
   	RequestType();
 }
+void HTTP::RequestType()
+{
+	std::map<std::string, std::string>::iterator it;
+	if ((it = Request_header.find("Transfer-Encoding")) != Request_header.end() && it->second.find("chunked") != std::string::npos)
+	{
+		htype = Chunk;
+	}
+	else if ((it = Request_header.find("Content-Length")) != Request_header.end())
+	{
+		htype = ContentLength;
+		BodyLength = to_namber(it->second.c_str());
+	}
+	else
+		htype = Unknown;
+}
 
 bool HTTP::CheckRequestForm()
 {
-	if(RequestMethod() || CheckUrlState() || IsMethodAllowedInLocation())
+	if(RequestMethod())
 		return true;
+	
 	return false;
 }
 
@@ -73,101 +85,68 @@ bool HTTP::RequestMethod()
 {
 	if (Method != "GET" && Method != "POST" && Method != "DELETE")
 	{
-		sendCodeResponse("501");
+		//sendCodeResponse("501");
 		return true;
 	}
 	if (Version != "HTTP/1.1")
 	{
-		sendCodeResponse("505");
+		//sendCodeResponse("505");
 		return true;
 	}
 	if (this->Method == "POST")
 	{
 		if (this->htype == ContentLength && this->BodyLength == 0)
 		{
-			sendCodeResponse("400");
+			//sendCodeResponse("400");
 			return true;
 		}
 		else if (this->htype == Unknown)
 		{
-			sendCodeResponse("411");
+			//sendCodeResponse("411");
 			return true;
 		}
 	}
-
 	return false;
 }
 
-bool HTTP::CheckUrlState()
-{
-	const std::string NonWantedChar = " <>{}|\\^`";
-	if(Url.empty() || Url[0] != '/' || Url.find_first_of(NonWantedChar) != std::string::npos)
-	{
-		sendCodeResponse("400");
-		return true;
-	}
-	if (Url.find("..") != std::string::npos)
-	{
-		sendCodeResponse("403");
-		return true;
-	}
-	if (Url.length() > 2048)
-	{
-		sendCodeResponse("414");
-		return true;
-	}
-	this->Path = this->Url;// need to be explained 
-	std::vector<LocationConfig> serverLocations = this->_config.locations;
-	size_t i = 0;
-	std::sort(serverLocations.begin(), serverLocations.end(), fn);
-	for (i = 0; i < serverLocations.size(); i++)
-	{
-		if (compare(Path, serverLocations[i]))
-		{
-			this->_Location_Scoop = serverLocations[i];
-			break;
-		}
-	}
-	if (i == serverLocations.size())
-	{
-		this->sendCodeResponse("404");
-		return true;
-	}
-	return false;
-}
 
-bool HTTP::IsMethodAllowedInLocation()
-{
-	std::vector<std::string> methods_of_location = this->_Location_Scoop.methods;
-	std::vector<std::string>::iterator it;
-	bool methodFound = false;
 
-	for (it = methods_of_location.begin(); it != methods_of_location.end(); ++it)
-	{
-		if (*it == this->Method)
-		{
-			methodFound = true;
-			break;
-		}
-	}
-	if (!methodFound)
-	{
-		this->sendCodeResponse("405");
-		return true;
-	}
-	Path = GetRoot(this->Path, this->_Location_Scoop.path, this->_Location_Scoop.root);
-	return false;
-}
+// bool HTTP::CheckUrlState()
+// {
+// 	const std::string NonWantedChar = " <>{}|\\^`";
+// 	if(Url.empty() || Url[0] != '/' || Url.find_first_of(NonWantedChar) != std::string::npos)
+// 	{
+// 		//sendCodeResponse("400");
+// 		return true;
+// 	}
+// 	if (Url.find("..") != std::string::npos)
+// 	{
+// 		//sendCodeResponse("403");
+// 		return true;
+// 	}
+// 	if (Url.length() > 2048)
+// 	{
+// 		//sendCodeResponse("414");
+// 		return true;
+// 	}
+// 	this->Path = this->Url;// need to be explained 
+// 	std::vector<LocationConfig> serverLocations = this->_config.locations;
+// 	size_t i = 0;
+// 	std::sort(serverLocations.begin(), serverLocations.end(), fn);
+// 	for (i = 0; i < serverLocations.size(); i++)
+// 	{
+// 		{
+// 			this->_Location_Scoop = serverLocations[i];
+// 			break;
+// 		}
+// 	}
+// 	if (i == serverLocations.size())
+// 	{
+// 		//sendCodeResponse("404");
+// 		return true;
+// 	}
+// 	return false;
+// }
 
-std::string HTTP::GetRoot(const std::string &Url, const std::string &locationPath, const std::string &root)
-{
-	std::string matchedUri = Url;
-	std::string newroot =root;
-	std::size_t locationPos = matchedUri.find(locationPath);
-	if(newroot[newroot.size() -1] != '/')
-		newroot = newroot + "/";
-	if (locationPos != std::string::npos)
-		matchedUri.replace(locationPos, locationPath.length(), newroot);
-	return matchedUri;
-}
+
 

@@ -64,7 +64,6 @@ int HTTP::process_buffered_data(std::string &data, size_t &chunk_size, std::ofst
 			return 0;	// we reached the end of the body
 		  // skips both the size and \r\n
 		data.erase(0, size.length() + 2);
-		// std::string chunk_to_process = data;
 		if (chunk_size <= data.length())
 		{
 			// the whole chunk has been processed, lets look for the next /r/n
@@ -171,26 +170,15 @@ int HTTP::POST(Client *client)
 			response_ready = true;
 			return 0;
 		}
-		sendCodeResponse(to_string((size_t)res));
+		//sendCodeResponse(to_string((size_t)res));
 		this->response_ready = true;
 		return 0;
 	}
 	this->response_ready = true;
-	this->sendCodeResponse("201");
+	//sendCodeResponse("201");
 	return 0;
 }
 
-int HTTP::prepapreHeaders(Client *client)
-{
-	std::string extension = Path.substr(Path.find_last_of('.'));
-	std::string mime_type = getMimeType(extension);
-	Request_header["ext"] = extension;
-	Request_header["query"] = this->query;
-	Request_header["method"] = this->Method;
-	Request_header["body_file"] = client->file_name;
-
-	return 2;
-}
 
 // Function to initialize file handling
 int HTTP::initializeFileHandling(Client *client)
@@ -202,7 +190,7 @@ int HTTP::initializeFileHandling(Client *client)
 	{
 		if (this->_Location_Scoop.upload != true)
 		{
-			sendCodeResponse("403");
+			//sendCodeResponse("403");
 			return 1;
 		}
 	}
@@ -212,7 +200,7 @@ int HTTP::initializeFileHandling(Client *client)
 			return prepapreHeaders(client);
 		else
 		{
-			sendCodeResponse("403");
+			//sendCodeResponse("403");
 			return 1;
 		}
 	}
@@ -227,12 +215,12 @@ int HTTP::handleContentLength(const char *body, int bytesreceived, int &StatValu
 
 	if (this->Request_header.find("Content-Length") == this->Request_header.end())
 	{
-		sendCodeResponse("411");
+		//sendCodeResponse("411");
 		return 1;
 	}
 	else if (this->Request_header["Content-Length"] == "0")
 	{
-		sendCodeResponse("400");
+		//sendCodeResponse("400");
 		return 1;
 	}
 	else if (this->Request_header["Content-Length"] == bytesreceivedStr)
@@ -245,9 +233,3 @@ int HTTP::handleContentLength(const char *body, int bytesreceived, int &StatValu
 }
 
 // Function to close the file and send response
-void HTTP::closeFileAndSendResponse()
-{
-	this->response_ready = true;
-	// close(this->PostFd);
-	this->sendCodeResponse("201");
-}

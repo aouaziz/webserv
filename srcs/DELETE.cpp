@@ -76,7 +76,7 @@ int HTTP::DELETE(const std::string & path)//check if the file exists if it does 
         else
             result = 204;
     }
-    sendCodeResponse(to_string(result));
+    //sendCodeResponse(to_string(result));
     this->response_ready = true;
     return 0;
 }

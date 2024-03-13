@@ -39,7 +39,7 @@ public:
     ~Client(); 
     // recv request
     int     ReceivesRequest();
-    int     handleRedirections();
+    // int     handleRedirections();
     void    ProcessAndValidateBody();
     void    HandleRequestBody(std::string message);
     // send response
