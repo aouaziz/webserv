@@ -1,99 +1,55 @@
-#include "../includes/HTTP.hpp"
+#include "../includes/HTTPMethod.hpp"
 
-void    appendHeader(std::stringstream& header, const std::string& name, const std::string& value)
-{
-    if (!value.empty())
-    {
-        if (!name.empty())
-            header << name << ": " << value << "\r\n";
-        else
-            header << value << "\r\n";
 
-    }
-}
-void HTTP::SendResponseHeader(std::string CodeToSend, std::string Extention, std::string location, int Content_Length) // send Response header
+void HTTPMethod::composeResponseHeader(std::string statusCode, std::string contentType, std::string location, int contentLength)
 {
-    std::stringstream header;
-    std::string date = this->_linker.getDate();
-    appendHeader(header, "", "HTTP/1.1 " + CodeToSend + " " + this->_linker.Status_codes_error[CodeToSend]);
-    appendHeader(header, "Server", this->_config.server_name);
-    appendHeader(header, "Date", date);
-    appendHeader(header, "Location", location);
-    appendHeader(header, "Content-Type", Extention);
-    if (Content_Length)
-        header << "Content-Length: " << Content_Length << "\r\n";
-    header << "Connection: keep-alive\r\n";
-    header << "\r\n";
-    Response = header.str();
-    this->Response.append(this->Request_header["body"]);
+    std::stringstream responseHeader;
+    
+    responseHeader << "HTTP/1.1 " << statusCode << " " << _linker.Status_codes_error[statusCode] << "\r\n";
+    responseHeader << "Server: " << _config.server_name << "\r\n";
+
+    if (!location.empty())
+        responseHeader << "Location: " << location << "\r\n";
+    if (contentLength > 0) 
+        responseHeader << "Content-Length: " << contentLength << "\r\n";
+
+    responseHeader << "Content-Type: " << contentType << "\r\n";
+    responseHeader << "Connection: keep-alive\r\n";
+    responseHeader << "\r\n";
+    Response = responseHeader.str() + Request_header["body"];
     response_ready = true;
 }
 
-std::string     readFileIntoString(const std::string& filename)
-{
-    std::ifstream file(filename.c_str());
-    std::cout << filename << std::endl;
-    if (file)
-    {
-        std::stringstream req_data;
-        req_data << file.rdbuf();
-        file.close();
-        return req_data.str();
-    }
-    return "";
+
+std::string generateDefaultErrorPage(std::string statusCode, std::string statusMessage) {
+    return "<!DOCTYPE html><html><head><title>" + statusCode + " UwU " + statusMessage + "</title><style>body {font-family: 'Arial', sans-serif;background-color: #fce9ff;}.container {display: flex;justify-content: center;align-items: center;height: 100vh;}.content {text-align: center;padding: 50px;background-color: #fff;border-radius: 12px;box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);}.error-code {font-size: 48px;font-weight: bold;color: #ff69b4;}.error-message {font-size: 24px;color: #ff69b4;margin-top: 20px;}.back-link {margin-top: 20px;color: #800080;text-decoration: none;font-size: 18px;}.back-link:hover {color: #4b0082;text-decoration: underline;}</style></head><body><div class='container'><div class='content'><div class='error-code'>" + statusCode + "</div><div class='error-message'>" + statusMessage + "</div><a href='/' class='back-link'>Go back to Home</a></div></div></body></html>";
 }
 
 
-std::string         generateErrorPage(std::string CodeToSend, std::string statusMessage, std::string filename)
+void HTTPMethod::   sendCodeResponse(std::string statusCode) 
 {
-    std::string buffer;
-    std::string res;
-    std::ifstream file(filename.c_str());
-    if (file)
+    std::string errorPageContent;
+    if (this->_config.common.error_pages.find(statusCode) != this->_config.common.error_pages.end())// Check if there's a configured error page for the given status code
     {
-        std::stringstream req_data;
-        req_data << file.rdbuf();
-        file.close();
-        res = req_data.str();
-        res.insert(res.find("<title><") + 7, CodeToSend + " - " + statusMessage);
-        res.insert(res.find("<h1><") + 4, CodeToSend + " - " + statusMessage);
+        // std::cerr << "Error page found for status code " << statusCode << std::endl;
+        std::ifstream errorPageFile(this->_config.common.error_pages[statusCode].c_str());
+        // std::cerr << "Error page file: " << this->_config.common.error_pages[statusCode] << std::endl;
+        if(errorPageFile)
+        {
+            std::stringstream buffer;
+            buffer << errorPageFile.rdbuf();
+            errorPageContent = buffer.str();
+            errorPageFile.close();
+        }
     }
-    else
-        res = "<!DOCTYPE html><html><head><title>" + CodeToSend + " " + statusMessage + "</title><style>body {font-family: Arial, sans-serif;display: flex;justify-content: center;align-items: center;height: 100vh;margin: 0;text-align: center;}.content {transform: translateY(-50%);}.path {margin-top: 20px;font-style: italic;}.back-link {margin-top: 20px;color: #007BFF;text-decoration: none;}.back-link:hover {color: #0056b3;text-decoration: underline;}</style></head><body><div class='content'><h1><span class='span'>" + CodeToSend + "</span> " + statusMessage + "</h1><style>.path {background-color: rgba(130, 130, 130, 0.045);padding: 0.2rem 1rem;border: solid;border-color: rgba(67, 67, 67, 0.066);border-radius: 0.40rem;background-color: rgba(255, 0, 0, 0.011) ;box-shadow: transparent 0 10 0.2rem 0.1rem;}.span {color: red;}</style></div></body></html>";
-    return res;
-}
+    if(errorPageContent.empty())    // If there's no configured error page, generate a default one
+    {
+        std::string statusMessage = this->_linker.Status_codes_error[statusCode];
+        errorPageContent = generateDefaultErrorPage(statusCode, this->_linker.Status_codes_error[statusCode]);
+    }
 
-void  HTTP::RendRedirectResponse(std::string CodeToSend, std::string location)
-{
-    std::stringstream header;
-    appendHeader(header, "", "HTTP/1.1 " + CodeToSend + " " + this->_linker.Status_codes_error[CodeToSend]);
-    appendHeader(header, "Location", location);
-    header << "Connection: keep-alive\r\n";
-    header << "\r\n";
-    Response = header.str();
-    response_ready = true;
-}
-void HTTP::sendCodeResponse(std::string CodeToSend) 
-{
-    std::string Content;
-    std::string filename;
-    if(CodeToSend == "301")
-    {
-        RendRedirectResponse(CodeToSend,Url);
-        return ;
-    }
-    if (this->_config.common.error_pages.find(CodeToSend) != this->_config.common.error_pages.end() && this->_config.common.error_pages[CodeToSend] != "")
-    {
-        filename = this->_config.common.error_pages[CodeToSend];
-        Content = readFileIntoString(filename);
-    }
-    else// if Error code not found in conf
-    {
-        std::string statusMessage = this->_linker.Status_codes_error[CodeToSend];
-        Content = generateErrorPage(CodeToSend, statusMessage, filename);
-    }
-    this->Request_header["body"] = Content;
+    this->Request_header["body"] = errorPageContent;
     this->Request_header["Content-Type"] = "text/html";
-    this->Request_header["Content-Length"] = to_string(Content.length());
-    SendResponseHeader(CodeToSend, "text/html", "", Content.length());
+    this->Request_header["Content-Length"] = to_string(errorPageContent.length());
+    composeResponseHeader(statusCode, ".html", "", errorPageContent.length());
 }

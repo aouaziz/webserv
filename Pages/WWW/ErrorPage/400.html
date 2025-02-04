@@ -1,35 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Index</index></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            text-align: center;
         }
 
         .content {
-            transform: translateY(-50%);
+            text-align: center;
         }
-        
+
+        h1 {
+            color: #dc3545;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .span {
+            font-weight: bold;
+        }
+
         .path {
-            margin-top: 20px;
             font-style: italic;
+            color: #6c757d;
+            margin-top: 20px;
         }
 
         .back-link {
-            margin-top: 20px;
-            color: #007BFF;
+            color: #007bff;
             text-decoration: none;
         }
 
         .back-link:hover {
-            color: #0056b3;
             text-decoration: underline;
         }
     </style>
@@ -37,20 +49,8 @@
 <body>
     <div class="content">
         <h1><span class="span">400</span> Not Found</h1>
-        <style>
-            .path {
-                background-color: rgba(130, 130, 130, 0.045);
-                padding: 0.2rem 1rem;
-                border: solid;
-                border-color: rgba(67, 67, 67, 0.066);
-                border-radius: 0.40rem;
-                background-color: rgba(255, 0, 0, 0.011) ;
-                box-shadow: transparent 0 10 0.2rem 0.1rem;
-            }
-            .span {
-                color: red;
-            }
-        </style>
+        <p class="path">The requested URL was not found on this server.</p>
+        <a href="/" class="back-link">Go back to Home</a>
     </div>
 </body>
 </html>

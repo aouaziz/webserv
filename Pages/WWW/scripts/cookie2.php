@@ -13,6 +13,10 @@ if (!empty($_POST['username'])) {
 	$name = $_POST['username'];
 }
 
+// while (true) {
+	
+// }
+
 
 require 'header.php';
 ?>

@@ -13,12 +13,11 @@ void separateHeaderFromBody(const std::string &httpResponse, std::string &header
     size_t pos = httpResponse.find("\r\n\r\n");
     if (pos != std::string::npos)
     {
-        header = httpResponse.substr(0, pos + 4);
+        header = httpResponse.substr(0, pos);
         body = httpResponse.substr(pos + 4); // Skip the double newline characters
     }
     else
     {
-        // If double newline is not found, treat the whole response as header
         header = httpResponse;
         body = "";
     }
@@ -31,16 +30,15 @@ std::vector<std::string> split_env(std::string env)
     while ((pos = env.find(":")) != std::string::npos)
     {
         ret.push_back(env.substr(0, pos));
-        env.erase(0, pos + 1);
+        env.erase(0, pos + 1); // erase the first part of the string
     }
-    ret.push_back(env);
+    ret.push_back(env); // push the last part of the string
     return (ret);
 }
 
 // matching the extention with the cgi path in the config file
 std::string Cgi::check_ext(std::string ext)
 {
-    // std::cout << ext << std::endl;
     std::map<std::string, std::string>::const_iterator it = this->_config.cgi_ext.begin();
 
     while (it != this->_config.cgi_ext.end())
@@ -78,10 +76,9 @@ std::vector<std::string> Cgi::get_env(const std::string &file_path)
     return env_vec;
 }
 
-int Cgi::execute_cgi(std::string file_path, std::string ext)
+int Cgi::execute_cgi(Client &client, std::string file_path, std::string ext)
 {
     std::string cgi_path = check_ext(ext.substr(1));
-
     if (cgi_path.empty())
     {
         if (this->_header["method"] == "POST")
@@ -92,7 +89,6 @@ int Cgi::execute_cgi(std::string file_path, std::string ext)
     // we check if the cgi file exists and executable
     if (access(cgi_path.c_str(), F_OK | X_OK) == -1)
     {
-        std::cerr << "Error: file does not exist" << std::endl;
         return 404;
     }
 
@@ -110,14 +106,15 @@ int Cgi::execute_cgi(std::string file_path, std::string ext)
     std::string buff;
     std::string file_name = this->_header["body_file"];
 
-    int size = to_namber(this->_header["Content-Length"].c_str());
+    int size = to_number(this->_header["Content-Length"].c_str());
     (void)size;
 
-    int out = open("/tmp/out", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    std::string cgi_file_name = "/tmp/out_" + to_string(client.client_socket);
+    int out = open(cgi_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     int pid = fork();
     if (pid < 0)
     {
-        write(2, "cgi fail()\n", 12);
+        std::cerr << "cgi fail()\n";
         return 500;
     }
     // Child process
@@ -129,7 +126,7 @@ int Cgi::execute_cgi(std::string file_path, std::string ext)
             int fd_in = open(file_name.c_str(), O_RDONLY);
 
             if (dup2(fd_in, STDIN_FILENO) < 0)
-                std::cout << "dup2 failed" << std::endl;
+                std::cerr << "dup2 failed" << std::endl;
             close(fd_in);
         }
 
@@ -138,62 +135,41 @@ int Cgi::execute_cgi(std::string file_path, std::string ext)
         close(out);
 
         // Execute the CGI script
-        execve(argv[0], argv, envp);
+        int status_code = execve(argv[0], argv, envp);
         // If execve fails, print error message and exit
-        write(2, "cgi fail()\n", 12);
-        exit(1);
+         std::cerr << "cgi fail()\n";
+        exit(status_code);
     }
-
-    // Parent process
-    // Wait for the child process to finish
-    int status;
-    waitpid(pid, &status, 0); // Wait for the child process to finish
-    // if (result == 0)
-    // {
-    //     sleep(5);
-    //     result = waitpid(pid, &status, WNOHANG);
-    //     if (result == 0)
-    //     {
-    //         // Child process did not finish within the timeout, terminate it
-    //         kill(pid, SIGKILL);
-    //         return 500;
-    //     }
-    // }
-    if (WIFEXITED(status))
-    {
-        // Child process terminated normally
-        int exit_status = WEXITSTATUS(status);
-        if (exit_status != 0)
-        {
-            return 500;
-        }
-    }
-    else
-    {
-        // Child process terminated abnormally
-        return 500;
-    }
-    // std::cout << "STATUS: " << status << std::endl;
-    // Read from the pipe and store the response in 'buff'
-
-    char chunk[4096];
-    ssize_t bytes_read;
-    // this is blocking, should be handled by select
     close(out);
-    out = open("/tmp/out", O_RDONLY);
-    while ((bytes_read = read(out, chunk, sizeof(chunk))) > 0)
-    {
-        buff.append(chunk, bytes_read);
-    }
-    // Close file descriptors
-    close(out);
-
-    unlink("/tmp/out");
-    this->buff = buff;
-    separateHeaderFromBody(buff, this->header, this->body);
-    std::string httpHeader = "HTTP/1.1 200 OK\r\n";
-    this->header.insert(0, "Content-Length: " + to_string(this->body.size()) + "\r\n");
-    this->header.insert(0, httpHeader);
-    // std::cout << this->header << std::endl;
+    client.is_cgi_running = true;
+    client.cgi_pid = pid;
+    gettimeofday(&client.cgi_start_time, NULL);
     return 0;
 }
+
+std::string Cgi::finish_cgi_response(Client &client)
+{
+    // Read from the pipe and store the response in 'buff'
+    char chunk[4096];
+    std::string buff, header, body;
+    ssize_t bytes_read;
+    // this is blocking, should be handled by select
+    std::string cgi_file_name = "/tmp/out_" + to_string(client.client_socket);
+
+    int out = open(cgi_file_name.c_str(), O_RDONLY);
+    while ((bytes_read = read(out, chunk, sizeof(chunk))) > 0)
+        buff.append(chunk, bytes_read);
+    // Close file descriptors
+    close(out);
+    unlink(cgi_file_name.c_str());
+
+    separateHeaderFromBody(buff, header, body);
+    std::string httpHeader = "HTTP/1.1 200 OK\r\n";
+    header.insert(0, "Content-Length: " + to_string(body.size()) + "\r\n");
+    header.insert(0, httpHeader);
+    header.append("\r\n\r\n");
+    header.append(body);
+    client.request->response_ready = true;
+    return header;
+}
+

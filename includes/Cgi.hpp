@@ -1,6 +1,10 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 #include "Config.hpp"
+#include "Client.hpp"
+#include <sys/time.h>
+
+class Client;
 
 class Cgi {
     private:
@@ -19,7 +23,8 @@ class Cgi {
       std::string buff;
       int status_code;
 
-      int   execute_cgi(std::string file_path, std::string ext);
+      int execute_cgi(Client &client, std::string file_path, std::string ext);
+      static std::string finish_cgi_response(Client &client);
 
 };
 

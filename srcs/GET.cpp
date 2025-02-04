@@ -1,161 +1,183 @@
-   #include "../includes/HTTP.hpp"
+#include "../includes/HTTPMethod.hpp"
 
-
-
-bool HTTP::compare(std::string &Path, LocationConfig &location)
+HTTPMethod::HTTPMethod(ServerConfig serverConfig)
 {
-	size_t it = 0;
-	size_t size_Path = Path.size();
-	size_t size_location_path = location.path.size();
-	while (it < size_Path && it < size_location_path)
-	{
-		if (Path[it] == location.path[it])
-			it++;
-		else
-			break;
-	}
-	if (it == location.path.size())
-	{
-		if (it == Path.size() || (it < Path.size() && Path[it] == '/') || (it > 0 && Path[it - 1] == '/'))
-			return true;
-	}
-	return false;
+	this->_config = serverConfig;
+	this->response_ready = false;
+	this->_linker = Linker();
+	HeaderState = 0;
+	BodyLength = 0;
+	htype = 0;
+	this->requested_file_fd = -1;
+	this->is_header_sent = false;
+	this->Request_header["stop_receiving"] = "false";
 }
 
-std::string HTTP::getMimeType(const std::string &extension)
+HTTPMethod::~HTTPMethod()
 {
-	if (_linker.File_extensions.find(extension) != _linker.File_extensions.end())
-		return _linker.File_extensions[extension];
-	else
-		return "text/plain";
 }
 
-void HTTP::RequestType()
+HTTPMethod::HTTPMethod(const HTTPMethod &src)
 {
-	std::map<std::string, std::string>::iterator it;
-	if ((it = Request_header.find("Transfer-Encoding")) != Request_header.end() && it->second.find("chunked") != std::string::npos)
+	*this = src;
+}
+
+HTTPMethod &HTTPMethod::operator=(const HTTPMethod &rhs)
+{
+	if (this != &rhs)
 	{
-		htype = Chunk;
+		this->htype = rhs.htype;
+		this->_config = rhs._config;
+		this->_Location_Scoop = rhs._Location_Scoop;
+		this->_linker = rhs._linker;
+
+		this->Path = rhs.Path;
+		this->Uri = rhs.Uri;
+		this->query = rhs.query;
+		this->Method = rhs.Method;
+		this->Version = rhs.Version;
+		this->Request_header = rhs.Request_header;
+		this->Response = rhs.Response;
+		this->HeaderState = rhs.HeaderState;
+		this->response_ready = rhs.response_ready;
+		this->client_socket = rhs.client_socket;
+		this->boundary = rhs.boundary;
+		this->BodyLength = rhs.BodyLength;
+		this->MimeType = rhs.MimeType;
+		this->requested_file_fd = rhs.requested_file_fd;
+		this->is_header_sent = rhs.is_header_sent;
+		this->to_erase = rhs.to_erase;
 	}
-	else if ((it = Request_header.find("Content-Length")) != Request_header.end())
-	{
-		htype = ContentLength;
-		BodyLength = to_namber(it->second.c_str());
-	}
-	else
-		htype = Unknown;
+	return *this;
 }
 
 
-
-// SEND RESPONSE HEADER
-std::string HTTP::GenerateDirectoryList(std::string statusCode, std::string ls)
+void HTTPMethod::serveIndexFile(int &indexFound)
 {
-	if (ls.empty())
+	std::string indexPath = Path + '/' + _Location_Scoop.index;
+	Path = indexPath;
+	std::ifstream indexFile(indexPath.c_str());
+	if (indexFile)
 	{
-		std::cerr << "Error: GenerateDirectoryList <Directory listing>" << std::endl;
-		sendCodeResponse("500");
-		return "";
-	}
-	std::string statusMessage = _linker.Status_codes_error[statusCode];
-	std::stringstream stream(ls);
-	std::ostringstream ResponseDir;
-	ResponseDir << "<html><head><title>Directory list</title></head><style>body { font-family: Arial, sans-serif; } ul { list-style-type: none; } a { color: blue; text-decoration: none; }</style><body><h1>Directory list</h1><ul>";
-	std::string entry;
-	while (std::getline(stream, entry, '\n'))
-	{
-		if (entry != "..")
-			ResponseDir << "<li><a href=\"" << entry << "\">" << entry.substr(entry.find_last_of("/") + 1) << "</a></li>";
-	}
-	ResponseDir << "</ul></h1></body></html>";
-	Request_header["Content-Type"] = "text/html";
-	Request_header["Content-Length"] = to_string(ResponseDir.str().length());
-	return ResponseDir.str();
-}
+		indexFound = 1;
+		std::stringstream indexContent;
+		indexContent << indexFile.rdbuf(); // rdbuf reads the entire indexFile
+		indexFile.close();
 
-// PROCCESS REQUEST
+		Request_header["body"] = indexContent.str();
 
-void HTTP::handleIndexFileRequest(int &IndexFound)
-{
-	std::string indexfilepath;
-	indexfilepath = Path + _Location_Scoop.index;
-	Path = indexfilepath;
-	IndexFound = 1;
-	std::ifstream file(indexfilepath.c_str());
-	if (file)
-		handleIndexFileExistence(file);
+		std::string extension = Path.substr(Path.find_last_of('.'));
+		std::string mimeType = _linker.Mime_types[extension];
+		if (mimeType.empty())
+			mimeType = "text/plain";
+		if (indexContent.str().empty())
+			Request_header["content-length"] = "0";
+
+		Request_header["content-type"] = mimeType;
+		Request_header["content-length"] = to_string(indexContent.str().length());
+
+		if (HeaderState == 0)
+		{
+			composeResponseHeader("200", mimeType, "", indexContent.str().length());
+		}
+	}
 	else
 		sendCodeResponse("404"); // Error: Index file not found
 }
 
-void HTTP::handleAutoIndexRequest(const std::string &IfDir)
-{ // Done
-	DIR *DirPtr;
-	struct dirent *Dir;
-	DirPtr = opendir(Path.c_str());
-	if (DirPtr == NULL)
+void HTTPMethod::serveAutoIndex(const std::string &directoryPath)
+{
+	DIR *directoryPtr;
+	struct dirent *directoryEntry;
+	directoryPtr = opendir(Path.c_str());
+
+	if (directoryPtr == NULL)
 	{
 		sendCodeResponse("500"); // Error: Unable to retrieve file/directory information
 		return;
 	}
-	if (DirPtr)
-	{
-		std::string DirStr;
-		while ((Dir = readdir(DirPtr)) != NULL)
-		{
-			DirStr += IfDir + Dir->d_name + '\n';
-		}
-		closedir(DirPtr);
 
-		if (!DirStr.empty())
-		{
-			std::string ListDirectory = GenerateDirectoryList("200", DirStr);
-			Request_header["body"] = ListDirectory;
-			SendResponseHeader("200", ".html", "", ListDirectory.length());
-		}
-		else
-		{
-			sendCodeResponse("403"); // Error: No autoindex and no index file
-		}
+	std::string fullDirectoryPath = directoryPath;
+	if (fullDirectoryPath[fullDirectoryPath.length() - 1] != '/')
+	{
+		fullDirectoryPath += '/';
 	}
+
+	std::string statusMessage = _linker.Status_codes_error["200"];
+	std::ostringstream ResponseDir;
+	ResponseDir << "<html><head><title>Directory list</title><style>body{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding:0}h1{color:#333;text-align:center;margin-top:20px}ul{list-style-type:none;padding:0;margin:0}li{padding:10px;background-color:#fff;border-bottom:1px solid #ddd}li:hover{background-color:#f9f9f9}a{color:#007bff;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><h1>Directory list</h1><ul>";
+	std::string directoryList;
+	while ((directoryEntry = readdir(directoryPtr)) != NULL) // read the directory
+	{
+		directoryList = fullDirectoryPath + directoryEntry->d_name;
+
+		if (std::string(directoryEntry->d_name) != "..")
+			ResponseDir << "<li><a href=\"" << directoryList << "\">" << directoryList.substr(directoryList.find_last_of("/") + 1) << "</a></li>";
+	}
+	closedir(directoryPtr);
+
+	ResponseDir << "</ul></h1></body></html>";
+	Request_header["Content-Type"] = "text/html";
+	Request_header["Content-Length"] = to_string(ResponseDir.str().length());
+	Request_header["body"] = ResponseDir.str();
+	composeResponseHeader("200", ".html", "", ResponseDir.str().length());
 }
 
-
-void HTTP::handleFileRequest()
+void HTTPMethod::handleRequestedPath(int &IndexFound)
 {
-	struct stat st;
-	std::string file_size;
+	std::string directoryPath = Uri;
+	struct stat pathStat;
+
+	if ((stat(Path.c_str(), &pathStat)) == 0) // if file found
+	{
+		if (pathStat.st_mode & S_IFDIR || pathStat.st_mode & S_IFREG) // if directory or regular file
+		{
+			if (directoryPath[directoryPath.length() - 1] != '/')
+				directoryPath += '/';
+			else if (directoryPath[directoryPath.length() - 1] == '/' && directoryPath.length() > 1)
+				directoryPath = directoryPath.substr(0, directoryPath.length() - 1);
+		}
+	}
+	if (_Location_Scoop.index.empty() == 0)	 // if index file is set
+		serveIndexFile(IndexFound);			 // handle index file
+	else if (_Location_Scoop.autoindex == 1) // if autoindex is enabled
+		serveAutoIndex(directoryPath);		 // handle autoindex
+	else
+		sendCodeResponse("403"); // Error: No index file and autoindex is disabled
+}
+
+void HTTPMethod::handleFileRequest(Client &client)
+{
 	this->requested_file_fd = open(Path.c_str(), O_RDONLY);
-	// std::cout << "fd: " << this->requested_file_fd << std::endl;
 	if (this->requested_file_fd == -1)
 	{
 		sendCodeResponse("404");
-		return ;
-	}
-	if (stat(Path.c_str(), &st) == 0)
-		file_size = to_string(st.st_size);
-	else
-	{
-		close(this->requested_file_fd);
-		this->requested_file_fd = - 1;
-		sendCodeResponse("500");
 		return;
 	}
+
+	struct stat fileInfo;
+	if (stat(Path.c_str(), &fileInfo) == -1)
+	{
+		sendCodeResponse("500");
+		close(this->requested_file_fd);
+		return;
+	}
+
+	std::string file_size = to_string(fileInfo.st_size);
 	std::string extension = Path.substr(Path.find_last_of('.'));
 	std::string mime_type = getMimeType(extension);
-	std::stringstream req_data;
+
 	Request_header["content-length"] = file_size;
 	Request_header["content-type"] = mime_type;
 	Request_header["query"] = this->query;
 	Request_header["method"] = this->Method;
+	HeaderState = 0;
 	if (this->_Location_Scoop.cgi == true)
 	{
 		Cgi cgi(this->_Location_Scoop, Request_header);
-		int res = cgi.execute_cgi(Path, extension);
+		int res = cgi.execute_cgi(client, Path, extension);
 		if (res == 0)
 		{
-			Response.append(cgi.header);
-			Response.append(cgi.body);
 			response_ready = true;
 			close(this->requested_file_fd);
 			requested_file_fd = -1;
@@ -169,36 +191,26 @@ void HTTP::handleFileRequest()
 			return;
 		}
 	}
-	SendResponseHeader("200", mime_type, "", to_namber(file_size.c_str()));
+	composeResponseHeader("200", mime_type, "", to_number(file_size.c_str()));
 }
 
-void HTTP::handleIndexFileExistence(std::ifstream &file)
-{
-	std::stringstream req_data;
-	req_data << file.rdbuf();
-	file.close();
-	std::string extension = Path.substr(Path.find_last_of('.'));
-	std::string mime_type = _linker.File_extensions[extension];
-	Request_header["body"] = req_data.str();
-	if (req_data.str().empty())
-		Request_header["content-length"] = "0";
-	Request_header["content-length"] = req_data.str().length();
-	if (mime_type.empty())
-		mime_type = "text/plain";
-	Request_header["content-type"] = mime_type;
-	SendResponseHeader("200", mime_type, "", req_data.str().length());
-}
-
-int HTTP::GET()
+int HTTPMethod::GET(Client &client)
 {
 	int IndexFound = 0;
 	struct stat CheckStat;
-	if (!stat(Path.c_str(), &CheckStat)) // if file found
+	if (!client.file_name.empty())
 	{
-		if (CheckStat.st_mode & S_IFDIR)		// if directory
-			handleDirectoryRequest(IndexFound); // handle directory
-		else if (CheckStat.st_mode & S_IFREG)	// if regular file
-			handleFileRequest();				// handle file
+		if (client.file_body)
+			client.file_body->close();
+		unlink(client.file_name.c_str());
+		client.file_name = "";
+	}
+	if (stat(Path.c_str(), &CheckStat) == 0) // if file found
+	{
+		if (CheckStat.st_mode & S_IFDIR)	  // if directory
+			handleRequestedPath(IndexFound);  // handle directory
+		else if (CheckStat.st_mode & S_IFREG) // if regular file
+			handleFileRequest(client);		  // handle file
 	}
 	else
 		sendCodeResponse("404"); // Error: File not found

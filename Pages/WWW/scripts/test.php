@@ -23,9 +23,6 @@ function greet($name) {
 
 greet("John");
 
-// while (true) {
-// }
-
 ?>
 
 <p>This is a simple PHP example mixed with HTML.</p>

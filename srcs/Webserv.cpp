@@ -3,7 +3,7 @@
 
 Webserv::Webserv(Config config)
 {
-    std::vector<ServerConfig> config_servers = config.get_servers();
+    const std::vector<ServerConfig> &config_servers = config.get_servers();
     for (size_t i = 0; i < config_servers.size(); i++)
     {
         Server server(config.servers[i]);
@@ -15,7 +15,6 @@ Webserv::Webserv(Config config)
         std::cout << "server " << servers[i].ip << " is running on port " << servers[i].port << std::endl;
     }
 
-    InitSelect();
     start_select_loop();
 }
 
@@ -25,7 +24,17 @@ std::string to_string(size_t num) {
   return ss.str();
 }
 
-size_t to_namber(const char *num) {
+void check(int namber, std::string error)
+{
+    if (namber == SOCKETERROR)
+    {
+        std::cerr << error << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+size_t to_number(const char *num) {
     size_t ret;
     std::stringstream ss;
     ss << num;
@@ -33,22 +42,14 @@ size_t to_namber(const char *num) {
     return ret;
 }
 
-size_t FromHexToNamber(const std::string &hexString)
-{
-    size_t size;
-    std::stringstream ss(hexString);
-	ss << std::hex;
-	ss >> size; 
-    return size;
-}
-
 Webserv::~Webserv()
 {
-    servers.clear(); 
+    servers.clear();
 }
+
 void Webserv::InitSelect()
 {
-    time.tv_sec = 120;
+    time.tv_sec = 120;// select time out
     time.tv_usec= 0;
     FD_ZERO(&fd_r);
     FD_ZERO(&fd_w);
@@ -64,18 +65,19 @@ void Webserv::InitSelect()
 
 void Webserv::start_select_loop()
 {
-    
-    signal(SIGPIPE, SIG_IGN);
+    InitSelect();
+    int max = 0;
     while (true)
     {
+        signal(SIGPIPE, SIG_IGN);   
         fd_tr = fd_r;
         fd_tw = fd_w;
         Slecetfd = select(maxfd+1, &fd_tr, &fd_tw, NULL, &time);
-        HandleSocketError(Slecetfd, "select error" );
+        check(Slecetfd, "select error" );
         if (Slecetfd == 0)
         {
             for (size_t i = 0; i < servers.size(); i++)
-                maxfd = servers[i].CheckTime(fd_r,fd_w,maxfd);
+                servers[i].CheckTime(fd_r,fd_w);
             continue;
         }
         for (size_t i = 0; i < servers.size(); i++)
@@ -83,18 +85,10 @@ void Webserv::start_select_loop()
             if (FD_ISSET(servers[i].server_socket,&fd_tr))
                 max =servers[i].AcceptClient(fd_r);
             else
-                maxfd = servers[i].Isset(fd_r,fd_w,fd_tr,fd_tw,maxfd);
+                servers[i].Isset(fd_r,fd_w,fd_tr,fd_tw);
             if(max > maxfd)
                 maxfd = max;
         }
     }
 }
 
-void HandleSocketError(int namber, const std::string& errorMessage)
-{
-    if (namber <= SOCKETERROR)
-    {
-        std::cerr << errorMessage << std::endl;
-        exit(EXIT_FAILURE);
-    }
-}

@@ -1,4 +1,4 @@
-#include "../includes/HTTP.hpp"
+#include "../includes/HTTPMethod.hpp"
 
 bool remove_folder(const std::string & path)
 {
@@ -46,7 +46,7 @@ int is_directory(const std::string & path)//check if the path is a directory
     return S_ISDIR(s.st_mode);//S_ISDIR is a macro that returns true if the file is a directory
 }
 
-int HTTP::DELETE(const std::string & path)//check if the file exists if it does not exist return 404
+int HTTPMethod::DELETE(const std::string & path)//check if the file exists if it does not exist return 404
 {
     int result = 0;
     if (access(path.c_str(), F_OK) == -1)

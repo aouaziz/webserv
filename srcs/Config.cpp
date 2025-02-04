@@ -23,14 +23,12 @@ Config& Config::operator=(const Config& object)
 
 Config::Config(std::string file_name) : file_name(file_name)
 {
-    // std::cout << "Config constructor called" << std::endl;
     server_brackets = false;
     location_brackets = false;
 }
 
 Config::~Config()
 {
-    // std::cout << "Config destructor called" << std::endl;
 }
 
 void Config::handle_server(std::stringstream &ss)
@@ -38,7 +36,7 @@ void Config::handle_server(std::stringstream &ss)
     (void)ss;
     if(server_brackets)//in case there is a server inside a server
     {
-        std::cout << "Error: server brackets not closed" ;
+        std::cerr << "Error: server brackets not closed" ;
         return ;
     }
     current_server = ServerConfig();//reset current_server
@@ -128,6 +126,8 @@ void Config::handle_server_name(std::stringstream &ss)
     if(current_server.server_name.empty())
         throw std::runtime_error ("Error: no server_name specified" );
 }
+
+
 void Config::handle_errorPages(std::stringstream &ss) {
     if (!location_brackets && !server_brackets) {
         throw std::runtime_error("Error: error_pages must be inside location or server brackets");
@@ -169,8 +169,6 @@ void Config::handle_maxBodySize(std::stringstream &ss)
         throw std::runtime_error ("Error: no max_body_size specified" );
     if (location_brackets == true)
         current_location.client_max_body_size = max_body_size;
-    else if (server_brackets == true)
-        throw std::runtime_error ("Error: " );
 }
 
 void Config::handle_root(std::stringstream &ss)
@@ -367,7 +365,6 @@ void Config::handle_cgi_ext(std::stringstream &ss)
         ss >> path;
         if(path.empty() || ext.empty())
             throw std::runtime_error("Error: cgi_path must be followed by an extension and a path");
-        //current_location.cgi_ext.push_back(std::make_pair(ext, path));
         current_location.cgi_ext[ext] = path;
     }
 }
@@ -399,32 +396,15 @@ void Config::check_config()
                 if (!isdigit(servers[i].common.client_max_body_size[j]))
                     throw std::runtime_error("Error: client_max_body_size must be a number");
         }
-        // for (int i = 0; i < servers[i].locations.size(); i++)
-        // {
-        //     if (servers[i].common.client_max_body_size.empty())
-        //     servers[i].common.client_max_body_size = "10000000"; // 1megabyte
-        //     else
-        //     {
-        //         for (size_t j = 0; j < servers[i].common.client_max_body_size.size(); j++)
-        //             if (!isdigit(servers[i].common.client_max_body_size[j]))
-        //                 throw std::runtime_error("Error: client_max_body_size must be a number");
-        //     }
-        // }
+      
         if (servers[i].common.root.empty())
             throw std::runtime_error("Error: no root specified");
-        // if (servers[i].common.index.empty())
-        //     throw std::runtime_error("Error: no index specified");
-        // if (servers[i].common.autoindex == true && servers[i].common.index.empty())
-        //     throw std::runtime_error("Error: autoindex is on but no index specified");
-        // if (servers[i].common.methods.empty())
-        //     throw std::runtime_error("Error: no method specified");
     }
 
 }
 
 void Config::printConfig()
 {
-    std::cout << "SERVER" << std::endl;
     for (size_t i = 0; i < servers.size();  i++)
     {
         std::cout << "server " << i + 1 << std::endl;
@@ -470,9 +450,6 @@ void Config::printConfig()
             std::cout << "  upload_path: " << servers[i].locations[j].upload_path << std::endl;
             std::cout << "  cgi: " << servers[i].locations[j].cgi << std::endl;
             std::cout << "  cgi_ext: " << std::endl;
-            // for (size_t k = 0; k < servers[i].locations[j].cgi_ext.size(); k++)
-            //     std::cout << "    " << servers[i].locations[j].cgi_ext[k].first << " => " << servers[i].locations[j].cgi_ext[k].second << std::endl;
-            
         }
     }
 }

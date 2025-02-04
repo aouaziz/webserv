@@ -11,6 +11,9 @@ form = cgi.FieldStorage()
 # get the value of the "name" parameter
 name = form.getvalue("name")
 
+while (True):
+    pass
+
 # create a new cookie
 cookie = http.cookies.SimpleCookie()
 cookie["name"] = name
@@ -34,6 +37,3 @@ print("</body></html>")
 
 # set the cookie in the response
 print(cookie.output())
-
-while True:
-    pass

@@ -42,7 +42,7 @@ class Config
         std::string last_key, key;
         std::vector<std::string> ports;
         ServerConfig current_server;
-        LocationConfig current_location;
+        LocationConfig current_location;//<===
         std::vector<ServerConfig> servers;
 
 

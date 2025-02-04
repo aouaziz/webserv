@@ -33,8 +33,7 @@
 #define BUFSIZE 1024
 #define MapOf_Str_Str std::map<std::string, std::string>
 std::string to_string(size_t num);
-size_t to_namber(const char *num);
-void HandleSocketError(int namber, const std::string& errorMessage);
-size_t FromHexToNamber(const std::string &hexString);
+size_t to_number(const char *num);
+void check(int namber, std::string error);
 
 #endif
